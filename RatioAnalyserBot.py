@@ -105,6 +105,12 @@ def highest_correl(all_r):
         output[base] = (highest_metric, highest_r)
     return output
 
+#sorts all correlation values by largest (best) to smallest (worst)
+def sort_all_r(all_r):
+    for base, values in all_r.items():
+        values.sort(key = lambda x: abs(x[1]), reverse = True)
+    return all_r
+
 #Takes in 2 columns (note the order), returns the equation of best fit line y = mx + c
 def graph_function(dataset, dependent, independent): 
     x2, y2 = [], []
@@ -127,12 +133,44 @@ def predict(eqn, independent):
     #print(round(output, 3))
     return output
 
+def user_input(dataset, all_r_sorted):
+    dependent = input('Please enter the dependent variable (e.g. PE Ratio, PB ratio). Enter "list" for a list of possible variables. \
+        Enter "exit" to stop the program \nDependent variable: ')
+    if dependent in all_r_sorted.keys():
+        for r in all_r_sorted[dependent]:
+            print(f'{r[0]}: {r[1]} correlation')
+            independent_value = input("Enter variable value, or 'NIL' to try the next best variable \n Value: ")
+            independent_value = float(independent_value)
+            if independent_value == 'NIL':
+                continue
+            else:
+                try:
+                    eqn = graph_function(dataset, dependent, r[0])
+                    prediction = predict(eqn, independent_value)
+                    print(f'With a {r[0]} value of {independent_value}, {dependent} is likely to be {round(prediction, 3)}')
+                    return prediction
+                except:
+                    print('Variable value entered incorrectly. Please restart the program')
+                    user_input(dataset, all_r_sorted)
+    elif dependent == 'list':
+        print(all_r_sorted.keys())
+        user_input(data, all_r_sorted)
+    elif dependent == 'exit':
+        print('Program stopped!')
+        return None
+    else:
+        print('Invalid dependent variable. Please check the exact name of dependent variable')
+        user_input(dataset, all_r_sorted)
+
+
 ####TEMP TESTING STUFF####
 data = create_data('CompanyScreeningReport.csv')  
 correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 comparison_bases = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
 comparison_metrics = create_comparison(data, comparison_bases)
 all_r = find_all_r(data, comparison_metrics, comparison_bases)
+all_r_sorted = sort_all_r(all_r)
 highest_correl(all_r)
 eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 predict(eqn, 10)
+user_input(data, all_r_sorted)
