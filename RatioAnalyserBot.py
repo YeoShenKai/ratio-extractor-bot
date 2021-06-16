@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from numpy.testing._private.utils import tempdir
 import pandas as pd
 
 #csv file --> array. *Indexing: [columns][row]
@@ -162,15 +163,118 @@ def user_input(dataset, all_r_sorted):
         print('Invalid dependent variable. Please check the exact name of dependent variable')
         user_input(dataset, all_r_sorted)
 
+#Find the dependent variables, based on user inputs
+def find_dependents(dataset, *independents):
+    valid_nums = []
+    message = 'POSSIBLE DEPENDENT VARIABLES: \n' 
+    for i in range(len(dataset.columns)):
+        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications':
+            continue
+        elif independents: #if there are predetermined independent variables
+            if dataset.columns[i] in independents[0]:
+                continue
+        valid_nums.append(i)
+        message += str(i) + ' '*(5-len(str(i))) + f'{dataset.columns[i]} \n'
+    print(message) #asks for input of dependent variables
+    selection = input('Please enter the number of the selected dependent variables, seperated by a comma (no spaces):  ') 
+    selection = selection.split(',')
+    message2 = '\nSELECTED DEPENDENT VARIABLES: \n'
+    output = []
+    for num in selection:
+        try:
+            num = int(num)
+            message2 += f'{dataset.columns[num]} \n'
+            if int(num) not in valid_nums:
+                print('\n***Please enter a valid selection***\n')
+                temp = find_dependents(dataset, *independents)
+                return temp
+        except:
+            print('\n***Please enter a valid selection***\n')
+            temp = find_dependents(dataset, *independents)
+            return temp
+        output.append(dataset.columns[num])
+    print(message2) #displays confirmation
+    confirmation = input('Confirm? y/n:  ')
+    if confirmation == 'y':
+        print('\nDependent variables confirmed!\n')
+        return output
+    else:
+        temp = find_dependents(dataset, *independents)
+        return temp
+
+def find_independents(dataset, *dependents):
+    valid_nums = []
+    message = 'POSSIBLE INDEPENDENT VARIABLES: \n' 
+    for i in range(len(dataset.columns)):
+        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications':
+            continue
+        elif dependents: #if there are predetermined dependent variables
+            if dataset.columns[i] in dependents[0]:
+                continue
+        valid_nums.append(i)
+        message += str(i) + ' '*(5-len(str(i))) + f'{dataset.columns[i]} \n'
+    print(message) #asks for input of independent variables
+    selection = input('Please enter the number of the selected independent variables, seperated by a comma (no spaces). Enter "all" to select all:  ')
+    output = []
+    message2 = '\nSELECTED INDEPENDENT VARIABLES: \n'
+    if selection == 'all':
+        for i in valid_nums:
+            output.append(dataset.columns[i])
+            message2 += f'{dataset.columns[i]}\n'
+        print(message2) #displays confirmation
+        confirmation = input('Confirm? y/n:  ')
+        if confirmation == 'y':
+            print('\nIndependent variables confirmed!\n')
+            return output
+        else:
+            temp = find_independents(dataset, *dependents)
+            return temp
+    selection = selection.split(',')
+    
+    for num in selection:
+        try:
+            num = int(num)
+            message2 += f'{dataset.columns[num]} \n'
+            if int(num) not in valid_nums:
+                print('\n***Please enter a valid selection***\n')
+                temp = find_independents(dataset, *dependents)
+                return temp
+        except:
+            print('\n***Please enter a valid selection***\n')
+            temp = find_independents(dataset, *dependents)
+            return temp
+        output.append(dataset.columns[num])
+    print(message2) #displays confirmation
+    confirmation = input('Confirm? y/n:  ')
+    if confirmation == 'y':
+        print('\nIndependent variables confirmed!\n')
+        return output
+    else:
+        temp = find_independents(dataset, *dependents)
+        return temp
+
+#Combines finding dependents and independents into one function, then defines them globally. Also returns both in a list.
+def find_dependents_and_independents(dataset):
+    global dependents
+    global independents
+    dependents = find_dependents(dataset)
+    independents = find_independents(dataset, dependents)
+    return [dependents, independents]
 
 ####TEMP TESTING STUFF####
 data = create_data('CompanyScreeningReport.csv')  
-correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
-comparison_bases = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
-comparison_metrics = create_comparison(data, comparison_bases)
-all_r = find_all_r(data, comparison_metrics, comparison_bases)
-all_r_sorted = sort_all_r(all_r)
-highest_correl(all_r)
+#correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
+#comparison_bases = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
+#comparison_metrics = create_comparison(data, comparison_bases)
+#all_r = find_all_r(data, comparison_metrics, comparison_bases)
+#all_r_sorted = sort_all_r(all_r)
+#highest_correl(all_r)
 eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 predict(eqn, 10)
-user_input(data, all_r_sorted)
+#user_input(data, all_r_sorted)
+#dependents = find_dependents(data)
+#independents = find_independents(data, dependents)
+dependents_and_independents = find_dependents_and_independents(data)
+all_r = find_all_r(data, independents, dependents)
+all_r_sorted = sort_all_r(all_r)
+highest_correl(all_r)
