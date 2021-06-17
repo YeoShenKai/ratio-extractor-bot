@@ -67,7 +67,7 @@ def correl(dataset, col1, col2):
     else:
         return r
 
-#Determine all independent variables (secondary metrics), outputs as list
+#Determine all independent variables (secondary metrics), outputs as list. *OUTDATED
 def create_comparison(dataset, dependent): #dependent --> core ratios to be compared to (e.g. PE, PB ratio), input as a sequence
     comparison_bases = list(dataset.columns)
     if not dependent:
@@ -134,6 +134,7 @@ def predict(eqn, independent):
     #print(round(output, 3))
     return output
 
+#Find dependent and independent variables *OUTDATED - REFER TO FIND_DEPENDENTS AND FIND_INDEPENDENTS
 def user_input(dataset, all_r_sorted):
     dependent = input('Please enter the dependent variable (e.g. PE Ratio, PB ratio). Enter "list" for a list of possible variables. \
         Enter "exit" to stop the program \nDependent variable: ')
@@ -163,7 +164,7 @@ def user_input(dataset, all_r_sorted):
         print('Invalid dependent variable. Please check the exact name of dependent variable')
         user_input(dataset, all_r_sorted)
 
-#Find the dependent variables, based on user inputs
+#Find the dependent variables, based on user inputs. Can optionally take in list of independent variables to reduce number of selections
 def find_dependents(dataset, *independents):
     valid_nums = []
     message = 'POSSIBLE DEPENDENT VARIABLES: \n' 
@@ -202,6 +203,7 @@ def find_dependents(dataset, *independents):
         temp = find_dependents(dataset, *independents)
         return temp
 
+#Find the independent variables, based on user inputs. Can optionally take in list of dependent variables to reduce number of selections
 def find_independents(dataset, *dependents):
     valid_nums = []
     message = 'POSSIBLE INDEPENDENT VARIABLES: \n' 
@@ -261,20 +263,71 @@ def find_dependents_and_independents(dataset):
     independents = find_independents(dataset, dependents)
     return [dependents, independents]
 
+#takes in a dct of sorted r values, and asks the user to choose which 2 to do analysis on
+def eqn_constructor(dataset, all_r_sorted):
+    keys = list(all_r_sorted.keys())
+    print('CHOOSE YOUR DEPENDENT VARIABLE: \n')
+    for i in range(len(keys)):
+        print(f'{i}:    {list(all_r_sorted.keys())[i]}')
+    dependent_selection = input('\nAll possible selections have been displayed. \nPlease enter your selection, or enter "exit" to stop the program:   ')
+    if dependent_selection == 'exit':
+        print('Program stopped!')
+        return
+    try:
+        dependent_variable = keys[int(dependent_selection)] 
+    except ValueError:
+        print('ERROR: Please enter a valid selection. The selection should be a number.')
+        return
+    except IndexError:
+        print('ERROR: Please choose within the numbers provided in the list above.')
+        return
+    if int(dependent_selection) < 0:
+        print('ERROR: Please choose within the numbers provided in the list above.')
+        return
+    print(f'\nDependent variable has been selected as {dependent_variable}. \n')
+    print('CHOOSE YOUR INDEPENDENT VARIABLE: \n')
+    selected_dependent_avail_choices = list(all_r_sorted[keys[int(dependent_selection)]])
+    for i in range(5):
+        print(f'{i}:    {selected_dependent_avail_choices[i][0]}: corr = {selected_dependent_avail_choices[i][1]}')
+    independent_selection = input('\nThe top 5 independent variables with the highest correlation have been displayed.\
+         \nPlease enter your selection, or enter "exit" to stop the program:    ')
+    if independent_selection == 'exit':
+        print('Program stopped!')
+        return
+    try:
+        independent_variable = all_r_sorted[dependent_variable][int(independent_selection)][0]     
+    except ValueError:
+        print('ERROR: Please enter a valid selection. The selection should be a number between 0 to 4 inclusive.')
+        return
+    if int(independent_selection) > 4 or int(independent_selection) < 0:
+        print('ERROR: Please choose within the numbers provided in the list above.')
+        return
+    print(f'\nIndependent variable has been selected as {independent_variable}. \n')
+    eqn = graph_function(dataset, dependent_variable, independent_variable)
+    return eqn
+
+def analysis(filename):
+    data = create_data(filename)
+    dependents_and_independents = find_dependents_and_independents(data)
+    all_r = find_all_r(data, independents, dependents)
+    all_r_sorted = sort_all_r(all_r)
+    eqn = eqn_constructor(data, all_r_sorted)
+    independent_value = input('Please provide a value for the independent variable selected: ')
+    prediction = predict(eqn, int(independent_value))
+    print(f'The predicted value of the dependent variable is {round(prediction, 3)}')
+    return prediction
+
 ####TEMP TESTING STUFF####
 data = create_data('CompanyScreeningReport.csv')  
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
-#comparison_bases = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
-#comparison_metrics = create_comparison(data, comparison_bases)
-#all_r = find_all_r(data, comparison_metrics, comparison_bases)
-#all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
-eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
-predict(eqn, 10)
-#user_input(data, all_r_sorted)
+#eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
+#predict(eqn, 10)
 #dependents = find_dependents(data)
 #independents = find_independents(data, dependents)
-dependents_and_independents = find_dependents_and_independents(data)
-all_r = find_all_r(data, independents, dependents)
-all_r_sorted = sort_all_r(all_r)
-highest_correl(all_r)
+#dependents_and_independents = find_dependents_and_independents(data)
+#all_r = find_all_r(data, independents, dependents)
+#all_r_sorted = sort_all_r(all_r)
+#highest_correl(all_r)
+#equation = eqn_constructor(data, all_r_sorted)
+prediction = analysis('CompanyScreeningReport.csv')
