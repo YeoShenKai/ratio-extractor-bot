@@ -156,7 +156,7 @@ def user_input(dataset, all_r_sorted):
                     user_input(dataset, all_r_sorted)
     elif dependent == 'list':
         print(all_r_sorted.keys())
-        user_input(data, all_r_sorted)
+        user_input(dataset, all_r_sorted)
     elif dependent == 'exit':
         print('Program stopped!')
         return None
@@ -318,7 +318,8 @@ def analysis(filename):
     return prediction
 
 ####TEMP TESTING STUFF####
-data = create_data('CompanyScreeningReport.csv')  
+insurance_data = create_data('Insurance Report.csv')
+chemicals_data = create_data('Chemicals Report.csv')
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
@@ -330,4 +331,5 @@ data = create_data('CompanyScreeningReport.csv')
 #all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
 #equation = eqn_constructor(data, all_r_sorted)
-prediction = analysis('CompanyScreeningReport.csv')
+insurance_prediction = analysis('Insurance Report.csv')
+chemicals_prediction = analysis('Chemicals Report.csv')
