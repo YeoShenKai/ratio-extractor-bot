@@ -156,7 +156,7 @@ def user_input(dataset, all_r_sorted):
                     user_input(dataset, all_r_sorted)
     elif dependent == 'list':
         print(all_r_sorted.keys())
-        user_input(data, all_r_sorted)
+        user_input(dataset, all_r_sorted)
     elif dependent == 'exit':
         print('Program stopped!')
         return None
@@ -306,7 +306,7 @@ def eqn_constructor(dataset, all_r_sorted):
     eqn = graph_function(dataset, dependent_variable, independent_variable)
     return eqn
 
-def analysis(filename):
+def user_analysis(filename):
     data = create_data(filename)
     dependents_and_independents = find_dependents_and_independents(data)
     all_r = find_all_r(data, independents, dependents)
@@ -317,8 +317,12 @@ def analysis(filename):
     print(f'The predicted value of the dependent variable is {round(prediction, 3)}')
     return prediction
 
+def auto_analysis(filename):
+    pass
+
 ####TEMP TESTING STUFF####
-data = create_data('CompanyScreeningReport.csv')  
+insurance_data = create_data('Insurance Report.csv')
+chemicals_data = create_data('Chemicals Report.csv')
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
@@ -330,4 +334,5 @@ data = create_data('CompanyScreeningReport.csv')
 #all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
 #equation = eqn_constructor(data, all_r_sorted)
-prediction = analysis('CompanyScreeningReport.csv')
+insurance_prediction = user_analysis('Insurance Report.csv')
+chemicals_prediction = user_analysis('Chemicals Report.csv')
