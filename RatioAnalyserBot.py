@@ -169,7 +169,8 @@ def find_dependents(dataset, *independents):
     valid_nums = []
     message = 'POSSIBLE DEPENDENT VARIABLES: \n' 
     for i in range(len(dataset.columns)):
-        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications':
+        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications'\
+            or dataset.columns[i] == 'Company Type':
             continue
         elif independents: #if there are predetermined independent variables
             if dataset.columns[i] in independents[0]:
@@ -208,7 +209,8 @@ def find_independents(dataset, *dependents):
     valid_nums = []
     message = 'POSSIBLE INDEPENDENT VARIABLES: \n' 
     for i in range(len(dataset.columns)):
-        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications':
+        if dataset.columns[i] == 'Company Name' or dataset.columns[i] == 'Exchange:Ticker' or dataset.columns[i] == 'Industry Classifications'\
+            or dataset.columns[i] == 'Company Type':
             continue
         elif dependents: #if there are predetermined dependent variables
             if dataset.columns[i] in dependents[0]:
@@ -287,7 +289,7 @@ def eqn_constructor(dataset, all_r_sorted):
     print(f'\nDependent variable has been selected as {dependent_variable}. \n')
     print('CHOOSE YOUR INDEPENDENT VARIABLE: \n')
     selected_dependent_avail_choices = list(all_r_sorted[keys[int(dependent_selection)]])
-    for i in range(5):
+    for i in range(min(len(selected_dependent_avail_choices), 5)):
         print(f'{i}:    {selected_dependent_avail_choices[i][0]}: corr = {selected_dependent_avail_choices[i][1]}')
     independent_selection = input('\nThe top 5 independent variables with the highest correlation have been displayed.\
          \nPlease enter your selection, or enter "exit" to stop the program:    ')
@@ -312,27 +314,113 @@ def user_analysis(filename):
     all_r = find_all_r(data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
     eqn = eqn_constructor(data, all_r_sorted)
-    independent_value = input('Please provide a value for the independent variable selected: ')
-    prediction = predict(eqn, int(independent_value))
-    print(f'The predicted value of the dependent variable is {round(prediction, 3)}')
-    return prediction
+    if eqn is not None:
+        independent_value = input('Please provide a value for the independent variable selected: ')
+        prediction = predict(eqn, float(independent_value))
+        print(f'The predicted value of the dependent variable is {round(prediction, 3)}')
+        return prediction
+
+#Takes in a dct of sorted r values, then returns predictions for the greatest r value for each dependent variable.
+#This function is split into 2 smaller parts - auto_eqn and auto_prediction
+def auto_eqn_and_prediction(dataset, all_r_sorted):
+    output = {} #storage for function return
+    memory = {} #storage for user entered values, so that users would not need to enter the same value twice
+    prints = '\nPrice Multiples Prediction: \n' #storage for printed text
+    for dependent, independent in all_r_sorted.items():
+        temp_target_indep_variable = independent[0][0]
+        eqn = graph_function(dataset, dependent, temp_target_indep_variable)
+        if temp_target_indep_variable in memory:
+            independent_value = memory[temp_target_indep_variable]
+        else:
+            independent_value = input(f'\nPlease provide a value for the independent variable {temp_target_indep_variable}\
+. Enter "exit" to stop the program: ')
+            if independent_value == 'exit':
+                print('\nProgram stopped!')
+                return
+            else:
+                try:
+                    independent_value_float = float(independent_value) 
+                except ValueError:
+                    print('Error: Please enter a valid value for the variable.')
+                    return
+                prediction = predict(eqn, independent_value_float)
+                prints += f'{dependent}: {round(prediction, 3)}\n'
+                memory[temp_target_indep_variable] = independent_value_float
+        output[dependent] = [temp_target_indep_variable, prediction]
+    print(prints)
+    return output
+
+#Takes in sorted correlation values and outputs equations for the best indep variable for each dependent variable in a dictionary
+def auto_eqn(dataset, all_r_sorted):
+    output = {}
+    for dependent, independent in all_r_sorted.items():
+        target_indep_variable = independent[0][0]
+        correl = independent[0][1]
+        equation = graph_function(dataset, dependent, target_indep_variable)
+        output[dependent] = [target_indep_variable, equation, correl]
+    return output
+
+#Takes in equations for the best indep variable and asks for user input, to generate predictions
+def auto_prediction(dataset, best_eqns, show_correl = 0):
+    output = {} #storage for function return
+    memory = {} #storage for user entered values, so that users would not need to enter the same value twice
+    prints = '\nPrice Multiples Prediction: \n' #storage for printed text
+    for dependent, best_independent_and_correl in best_eqns.items():
+        target_indep_variable, equation, correl = best_independent_and_correl
+        if target_indep_variable in memory:
+            independent_value = memory[target_indep_variable]
+        else:
+            independent_value = input(f'\nPlease provide a value for the independent variable {target_indep_variable}\
+. Enter "exit" to stop the program: ')
+            if independent_value == 'exit':
+                print('\nProgram stopped!')
+                return
+            else:
+                try:
+                    independent_value_float = float(independent_value) 
+                except ValueError:
+                    print('Error: Please enter a valid value for the variable.')
+                    return
+                prediction = predict(equation, independent_value_float)
+                if show_correl:
+                    prints += f'{dependent} (corr = {round(correl, 2)}):    {round(prediction, 3)}\n'
+                else:
+                    prints += f'{dependent}:    {round(prediction, 3)}\n'
+                memory[target_indep_variable] = independent_value_float
+        output[dependent] = [target_indep_variable, prediction]
+    print(prints)
+    return output
 
 def auto_analysis(filename):
-    pass
+    data = create_data(filename)
+    dependents_and_independents = find_dependents_and_independents(data)
+    all_r = find_all_r(data, independents, dependents)
+    all_r_sorted = sort_all_r(all_r)
+    best_eqns = auto_eqn(data, all_r_sorted)
+    predictions = auto_prediction(data, best_eqns, 1)
+    return predictions
 
 ####TEMP TESTING STUFF####
-insurance_data = create_data('Insurance Report.csv')
-chemicals_data = create_data('Chemicals Report.csv')
+#1. Testing standalone functions
+#insurance_data = create_data('Insurance Report.csv')
+#chemicals_data = create_data('Chemicals Report.csv')
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #predict(eqn, 10)
 #dependents = find_dependents(data)
 #independents = find_independents(data, dependents)
-#dependents_and_independents = find_dependents_and_independents(data)
-#all_r = find_all_r(data, independents, dependents)
+#dependents_and_independents = find_dependents_and_independents(chemicals_data)
+#all_r = find_all_r(chemicals_data, independents, dependents)
 #all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
-#equation = eqn_constructor(data, all_r_sorted)
-insurance_prediction = user_analysis('Insurance Report.csv')
-chemicals_prediction = user_analysis('Chemicals Report.csv')
+#equation = eqn_constructor(chemicals_data, all_r_sorted)
+#insurance_prediction = user_analysis('Insurance Report.csv')
+#chemicals_prediction = user_analysis('Chemicals Report.csv')
+#auto_eqn_and_prediction(chemicals_data, all_r_sorted)
+#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+#predicc = auto_prediction(chemicals_data, best_eqns, 1)
+
+#2. Testing full functions
+#full_analysis = auto_analysis('Chemicals Report.csv')
+#full_analysis = auto_analysis('Insurance Report.csv')
