@@ -391,6 +391,7 @@ def auto_prediction(dataset, best_eqns, show_correl = 0):
     print(prints)
     return output
 
+#Function to do full analysis based on the best indep values with highest correl
 def auto_analysis(filename):
     data = create_data(filename)
     dependents_and_independents = find_dependents_and_independents(data)
@@ -400,52 +401,56 @@ def auto_analysis(filename):
     predictions = auto_prediction(data, best_eqns, 1)
     return predictions
 
+def user_prediction(dataset, best_eqns, user_inputs):
+    #user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
+    dct = {}
+    independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]', 'EBITDA Margin % [LTM]', \
+        'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
+    for dependent, indep_eqn_correl in best_eqns.items():
+        index = independents.index(indep_eqn_correl[0])
+        value = user_inputs[index]
+        prediction = predict(indep_eqn_correl[1], value)
+        dct[dependent] = prediction
+    return dct
 
-def output_website(filename, industry_type,
-                   revenue_growth, return_on_equity, current_ratio, 
-                   ebitda_margin, total_asset_turnover, total_debt_capital):
-    
-    # Function creates a two outputs dictionary. The first is the best estimated
-    # P/E ratio (pe_ratio) and the second is the best estimated 
-    # P/BV ratio (pb_ratio).
-    
+#Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
+#Solely for website
+def output_website(filename, user_inputs):
+    #user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
+    if len(user_inputs) != 7:
+        print('Please enter all the required values.')
+        return
     data = create_data(filename)
-    # [TODO]: To predefine the independents and dependents
-    independents = []
-    dependents = []
+    dependents = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
+    independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]', 'EBITDA Margin % [LTM]', \
+        'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
     all_r = find_all_r(data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
     best_eqns = auto_eqn(data, all_r_sorted)
-    predictions = auto_prediction(data, best_eqns, 1)
+    predictions = user_prediction(data, best_eqns, user_inputs)
+    return predictions
     
-    # [TODO]: To convert predictions into a list of two items: pe_ratio and pb_ratio
-    best_estimates = {}
-    best_estimates["pe_ratio"] = None
-    best_estimates["pb_ratio"] = None
-    
-    return best_estimates
-    
-
 ####TEMP TESTING STUFF####
 #1. Testing standalone functions
 #insurance_data = create_data('Insurance Report.csv')
-#chemicals_data = create_data('Chemicals Report.csv')
+chemicals_data = create_data('Chemicals Report.csv')
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #predict(eqn, 10)
 #dependents = find_dependents(data)
 #independents = find_independents(data, dependents)
-#dependents_and_independents = find_dependents_and_independents(chemicals_data)
-#all_r = find_all_r(chemicals_data, independents, dependents)
-#all_r_sorted = sort_all_r(all_r)
+dependents_and_independents = find_dependents_and_independents(chemicals_data)
+all_r = find_all_r(chemicals_data, independents, dependents)
+all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
 #equation = eqn_constructor(chemicals_data, all_r_sorted)
 #insurance_prediction = user_analysis('Insurance Report.csv')
 #chemicals_prediction = user_analysis('Chemicals Report.csv')
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
-#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
-#predicc = auto_prediction(chemicals_data, best_eqns, 1)
+best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+predicc = auto_prediction(chemicals_data, best_eqns, 1)
+output_website('Chemicals Report.csv', [1,1,1,1,1,1,1])
 
 #2. Testing full functions
 #full_analysis = auto_analysis('Chemicals Report.csv')
