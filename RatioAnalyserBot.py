@@ -400,6 +400,32 @@ def auto_analysis(filename):
     predictions = auto_prediction(data, best_eqns, 1)
     return predictions
 
+
+def output_website(filename, industry_type,
+                   revenue_growth, return_on_equity, current_ratio, 
+                   ebitda_margin, total_asset_turnover, total_debt_capital):
+    
+    # Function creates a two outputs dictionary. The first is the best estimated
+    # P/E ratio (pe_ratio) and the second is the best estimated 
+    # P/BV ratio (pb_ratio).
+    
+    data = create_data(filename)
+    # [TODO]: To predefine the independents and dependents
+    independents = []
+    dependents = []
+    all_r = find_all_r(data, independents, dependents)
+    all_r_sorted = sort_all_r(all_r)
+    best_eqns = auto_eqn(data, all_r_sorted)
+    predictions = auto_prediction(data, best_eqns, 1)
+    
+    # [TODO]: To convert predictions into a list of two items: pe_ratio and pb_ratio
+    best_estimates = {}
+    best_estimates["pe_ratio"] = None
+    best_estimates["pb_ratio"] = None
+    
+    return best_estimates
+    
+
 ####TEMP TESTING STUFF####
 #1. Testing standalone functions
 #insurance_data = create_data('Insurance Report.csv')
