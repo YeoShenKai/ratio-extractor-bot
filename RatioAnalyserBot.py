@@ -429,7 +429,7 @@ def output_website(filename, user_inputs):
     best_eqns = auto_eqn(data, all_r_sorted)
     predictions = user_prediction(data, best_eqns, user_inputs)
     return predictions
-    
+ 
 ####TEMP TESTING STUFF####
 #1. Testing standalone functions
 #insurance_data = create_data('Insurance Report.csv')
