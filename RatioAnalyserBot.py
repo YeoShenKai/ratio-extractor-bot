@@ -419,7 +419,8 @@ def output_website(filename, user_inputs):
     #user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
     if len(user_inputs) != 7:
         print('Please enter all the required values.')
-        return
+        return None
+
     data = create_data(filename)
     dependents = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
     independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]', 'EBITDA Margin % [LTM]', \
@@ -448,9 +449,9 @@ all_r_sorted = sort_all_r(all_r)
 #insurance_prediction = user_analysis('Insurance Report.csv')
 #chemicals_prediction = user_analysis('Chemicals Report.csv')
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
-best_eqns = auto_eqn(chemicals_data, all_r_sorted)
-predicc = auto_prediction(chemicals_data, best_eqns, 1)
-output_website('Chemicals Report.csv', [1,1,1,1,1,1,1])
+#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+#predicc = auto_prediction(chemicals_data, best_eqns, 1)
+temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
 
 #2. Testing full functions
 #full_analysis = auto_analysis('Chemicals Report.csv')
