@@ -456,7 +456,7 @@ def output_website(filename, user_inputs):
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
 #best_eqns = auto_eqn(chemicals_data, all_r_sorted)
 #predicc = auto_prediction(chemicals_data, best_eqns, 1)
-temp_result = output_website('Chemicals Report.csv', [1,1,1,1,1,1,1])
+temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
 
 #2. Testing full functions
 #full_analysis = auto_analysis('Chemicals Report.csv')

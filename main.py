@@ -9,23 +9,24 @@ app = Flask(__name__)
 def index():
     # Obtain the relevant inputs from the user
     selection_industry_type = request.args.get("selection_industry_type", "")
-    total_revenue_growth = request.args.get("total_revenue_growth", "")
-    return_on_equity = request.args.get("return_on_equity", "")
-    current_ratio = request.args.get("current_ratio", "")
-    ebitda_margin = request.args.get("ebitda_margin", "")
-    total_asset_turnover = request.args.get("total_asset_turnover", "")
-    total_debt_capital = request.args.get("total_debt_capital", "")
-
-    user_inputs = [selection_industry_type, total_revenue_growth, return_on_equity, current_ratio,
-                   ebitda_margin, total_asset_turnover, total_debt_capital]
-
 
     try:
+        total_revenue_growth = float(request.args.get("total_revenue_growth", ""))
+        return_on_equity = float(request.args.get("return_on_equity", ""))
+        current_ratio = float(request.args.get("current_ratio", ""))
+        ebitda_margin = float(request.args.get("ebitda_margin", ""))
+        total_asset_turnover = float(request.args.get("total_asset_turnover", ""))
+        total_debt_capital = float(request.args.get("total_debt_capital", ""))
+
+        user_inputs = [selection_industry_type, total_revenue_growth, return_on_equity, current_ratio,
+                       ebitda_margin, total_asset_turnover, total_debt_capital]
+
         predictions = output_website("Chemicals Report.csv", user_inputs)
         predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"] = str(round(predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"], 2))
         predictions["P/BV [Latest] (x)"] = str(round(predictions["P/BV [Latest] (x)"], 1))
-    except:
-        predictions = {}
+
+    except ValueError:
+        predictions = dict()
         predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"] = "not available"
         predictions["P/BV [Latest] (x)"] = "not available"
 
@@ -47,8 +48,8 @@ def index():
             
             <form action="" method="get">
                 Industry Type:<br>
-                <input type="radio" name="selection_industry_type" value="Insurance">
-                <label for="Insurance">Insurance</label><br>
+                <input type="radio" name="selection_industry_type" value="Commodity Chemicals (Primary)">
+                <label for="Insurance">Commodity Chemicals (Primary)</label><br>
                 <input type="radio" name="selection_industry_type" value="Manufacturing">
                 <label for="Manufacturing">Manufacturing</label><br>
                 
@@ -88,7 +89,7 @@ def index():
             + "The estimated P/E ratio is "
             + predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"]
             + "<br>"
-            + "The estimated P/BV ratio is "
+            + "The estimated P/B ratio is "
             + predictions["P/BV [Latest] (x)"]
             + "<br>"
     )
