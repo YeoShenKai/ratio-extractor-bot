@@ -416,41 +416,47 @@ def user_prediction(dataset, best_eqns, user_inputs):
 #Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
 #Solely for website
 def output_website(filename, user_inputs):
+
     #user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
     if len(user_inputs) != 7:
         print('Please enter all the required values.')
-        return
+        return None
     data = create_data(filename)
     dependents = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
     independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]', 'EBITDA Margin % [LTM]', \
         'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
+
+    # [TODO]: To utilize only the relevant industry benchmark companies for the analysis
     all_r = find_all_r(data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
     best_eqns = auto_eqn(data, all_r_sorted)
+
+    # [TODO]: To remove the industry selection from user_inputs before including into the predictions
+    user_inputs = user_inputs[1:]
     predictions = user_prediction(data, best_eqns, user_inputs)
     return predictions
     
 ####TEMP TESTING STUFF####
 #1. Testing standalone functions
 #insurance_data = create_data('Insurance Report.csv')
-chemicals_data = create_data('Chemicals Report.csv')
+#chemicals_data = create_data('Chemicals Report.csv')
 #correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #predict(eqn, 10)
 #dependents = find_dependents(data)
 #independents = find_independents(data, dependents)
-dependents_and_independents = find_dependents_and_independents(chemicals_data)
-all_r = find_all_r(chemicals_data, independents, dependents)
-all_r_sorted = sort_all_r(all_r)
+#dependents_and_independents = find_dependents_and_independents(chemicals_data)
+#all_r = find_all_r(chemicals_data, independents, dependents)
+#all_r_sorted = sort_all_r(all_r)
 #highest_correl(all_r)
 #equation = eqn_constructor(chemicals_data, all_r_sorted)
 #insurance_prediction = user_analysis('Insurance Report.csv')
 #chemicals_prediction = user_analysis('Chemicals Report.csv')
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
-best_eqns = auto_eqn(chemicals_data, all_r_sorted)
-predicc = auto_prediction(chemicals_data, best_eqns, 1)
-output_website('Chemicals Report.csv', [1,1,1,1,1,1,1])
+#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+#predicc = auto_prediction(chemicals_data, best_eqns, 1)
+temp_result = output_website('Chemicals Report.csv', [1,1,1,1,1,1,1])
 
 #2. Testing full functions
 #full_analysis = auto_analysis('Chemicals Report.csv')
