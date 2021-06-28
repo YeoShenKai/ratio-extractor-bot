@@ -51,17 +51,22 @@ def col_str_to_int(dataset, col):
     return temp
     
 #Takes in 2 column headers, and then determining the correl coeff (r value) for the two sets of data
-def correl(dataset, col1, col2):
+def correl(dataset, dependent, independent):
     x2, y2 = [], []
-    x = col_str_to_int(dataset, col1)
-    y = col_str_to_int(dataset, col2)
-    for i in range(1, len(x)+1 ):
-        if isnumber(x[i]) and isnumber(y[i]):
-            x2.append(x[i])
+    y = col_str_to_int(dataset, dependent)
+    x = col_str_to_int(dataset, independent)
+    for i in range(1, len(y)+1 ): #remove blanks
+        if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
-    x_array = np.array(x2)
-    y_array = np.array(y2)
-    r = np.corrcoef(x_array, y_array)
+            x2.append(x[i])
+    x_array = pd.Series(x2)
+    y_array = pd.Series(y2)
+    x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.15), x_array.quantile(0.85))]
+    y_corresponding_list = []
+    for i in x_array_no_outliers.index:
+        y_corresponding_list.append(y_array[i])
+    y_corresponding_array = pd.Series(y_corresponding_list)
+    r = np.corrcoef(x_array_no_outliers, y_corresponding_array)
     if round(r[0,1], 5) == round(r[1,0], 5):
         return round(r[0,1], 5)
     else:
@@ -115,15 +120,20 @@ def sort_all_r(all_r):
 #Takes in 2 columns (note the order), returns the equation of best fit line y = mx + c
 def graph_function(dataset, dependent, independent): 
     x2, y2 = [], []
-    x = col_str_to_int(dataset, dependent)
-    y = col_str_to_int(dataset, independent)
-    for i in range(1, len(x)+1 ):
-        if isnumber(x[i]) and isnumber(y[i]):
-            x2.append(x[i])
+    y = col_str_to_int(dataset, dependent)
+    x = col_str_to_int(dataset, independent)
+    for i in range(1, len(y)+1 ): #remove blanks
+        if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
-    x_array = np.array(x2)
-    y_array = np.array(y2)
-    eqn = np.polyfit(x_array, y_array, 1)
+            x2.append(x[i])
+    x_array = pd.Series(x2)
+    y_array = pd.Series(y2)
+    x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.15), x_array.quantile(0.85))]
+    y_corresponding_list = []
+    for i in x_array_no_outliers.index:
+        y_corresponding_list.append(y_array[i])
+    y_corresponding_array = pd.Series(y_corresponding_list)
+    eqn = np.polyfit(y_corresponding_array, x_array_no_outliers, 1)
     #print(f'{round(eqn[0], 3)}x + {round(eqn[1], 3)}')
     return eqn
 
@@ -444,14 +454,14 @@ chemicals_data = create_data('Chemicals Report.csv')
 dependents_and_independents = find_dependents_and_independents(chemicals_data)
 all_r = find_all_r(chemicals_data, independents, dependents)
 all_r_sorted = sort_all_r(all_r)
-#highest_correl(all_r)
+highest_correl(all_r)
 #equation = eqn_constructor(chemicals_data, all_r_sorted)
 #insurance_prediction = user_analysis('Insurance Report.csv')
 #chemicals_prediction = user_analysis('Chemicals Report.csv')
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
-#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+best_eqns = auto_eqn(chemicals_data, all_r_sorted)
 #predicc = auto_prediction(chemicals_data, best_eqns, 1)
-temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
+#temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
 
 #2. Testing full functions
 #full_analysis = auto_analysis('Chemicals Report.csv')
