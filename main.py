@@ -21,7 +21,7 @@ def index():
         user_inputs = [selection_industry_type, total_revenue_growth, return_on_equity, current_ratio,
                        ebitda_margin, total_asset_turnover, total_debt_capital]
 
-        predictions = output_website("Chemicals Report.csv", user_inputs)
+        predictions = output_website("data/", user_inputs)
         predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"] = str(round(predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"], 2))
         predictions["P/BV [Latest] (x)"] = str(round(predictions["P/BV [Latest] (x)"], 1))
 
