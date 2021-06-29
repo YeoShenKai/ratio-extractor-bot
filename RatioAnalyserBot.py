@@ -51,17 +51,26 @@ def col_str_to_int(dataset, col):
     return temp
     
 #Takes in 2 column headers, and then determining the correl coeff (r value) for the two sets of data
-def correl(dataset, col1, col2):
+def correl(dataset, dependent, independent):
     x2, y2 = [], []
-    x = col_str_to_int(dataset, col1)
-    y = col_str_to_int(dataset, col2)
-    for i in range(1, len(x)+1 ):
-        if isnumber(x[i]) and isnumber(y[i]):
-            x2.append(x[i])
+    y = col_str_to_int(dataset, dependent)
+    x = col_str_to_int(dataset, independent)
+    for i in range(1, len(y)+1 ): #remove blanks
+        if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
-    x_array = np.array(x2)
-    y_array = np.array(y2)
-    r = np.corrcoef(x_array, y_array)
+            x2.append(x[i])
+    x_array = pd.Series(x2)
+    y_array = pd.Series(y2)
+    x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.10), x_array.quantile(0.90))]
+    y_array_no_outliers = y_array[y_array.between(y_array.quantile(0.10), y_array.quantile(0.90))]
+    x_corresponding_list, y_corresponding_list = [], []
+    for i in x_array_no_outliers.index:
+        if i in y_array_no_outliers.index:
+            x_corresponding_list.append(x_array[i])
+            y_corresponding_list.append(y_array[i])
+    x_corresponding_array = pd.Series(x_corresponding_list)
+    y_corresponding_array = pd.Series(y_corresponding_list)
+    r = np.corrcoef(x_corresponding_array, y_corresponding_array)
     if round(r[0,1], 5) == round(r[1,0], 5):
         return round(r[0,1], 5)
     else:
@@ -115,15 +124,22 @@ def sort_all_r(all_r):
 #Takes in 2 columns (note the order), returns the equation of best fit line y = mx + c
 def graph_function(dataset, dependent, independent): 
     x2, y2 = [], []
-    x = col_str_to_int(dataset, dependent)
-    y = col_str_to_int(dataset, independent)
-    for i in range(1, len(x)+1 ):
-        if isnumber(x[i]) and isnumber(y[i]):
-            x2.append(x[i])
+    y = col_str_to_int(dataset, dependent)
+    x = col_str_to_int(dataset, independent)
+    for i in range(1, len(y)+1 ): #remove blanks
+        if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
-    x_array = np.array(x2)
-    y_array = np.array(y2)
-    eqn = np.polyfit(x_array, y_array, 1)
+            x2.append(x[i])
+    x_array = pd.Series(x2)
+    y_array = pd.Series(y2)
+    x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.10), x_array.quantile(0.90))]
+    y_array_no_outliers = y_array[y_array.between(y_array.quantile(0.10), y_array.quantile(0.90))]
+    x_corresponding_list, y_corresponding_list = [], []
+    for i in x_array_no_outliers.index:
+        if i in y_array_no_outliers.index:
+            x_corresponding_list.append(x_array[i])
+            y_corresponding_list.append(y_array[i])
+    eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
     #print(f'{round(eqn[0], 3)}x + {round(eqn[1], 3)}')
     return eqn
 
@@ -365,31 +381,78 @@ def auto_prediction(dataset, best_eqns, show_correl = 0):
     output = {} #storage for function return
     memory = {} #storage for user entered values, so that users would not need to enter the same value twice
     prints = '\nPrice Multiples Prediction: \n' #storage for printed text
+    input_values = []
     for dependent, best_independent_and_correl in best_eqns.items():
         target_indep_variable, equation, correl = best_independent_and_correl
-        if target_indep_variable in memory:
-            independent_value = memory[target_indep_variable]
+        independent_value = input(f'\nPlease provide a value for the independent variable {target_indep_variable}. Enter "exit" to stop the program: ')
+        if independent_value == 'exit':
+            print('\nProgram stopped!')
+            return
         else:
-            independent_value = input(f'\nPlease provide a value for the independent variable {target_indep_variable}\
-. Enter "exit" to stop the program: ')
-            if independent_value == 'exit':
-                print('\nProgram stopped!')
+            try:
+                independent_value_float = float(independent_value) 
+            except ValueError:
+                print('Error: Please enter a valid value for the variable.')
                 return
+            prediction = predict(equation, independent_value_float)
+            input_values.append(independent_value_float)
+            if show_correl:
+                prints += f'{dependent} (corr = {round(correl, 2)}):    {round(prediction, 3)}\n'
             else:
-                try:
-                    independent_value_float = float(independent_value) 
-                except ValueError:
-                    print('Error: Please enter a valid value for the variable.')
-                    return
-                prediction = predict(equation, independent_value_float)
-                if show_correl:
-                    prints += f'{dependent} (corr = {round(correl, 2)}):    {round(prediction, 3)}\n'
-                else:
-                    prints += f'{dependent}:    {round(prediction, 3)}\n'
-                memory[target_indep_variable] = independent_value_float
+                prints += f'{dependent}:    {round(prediction, 3)}\n'
+            memory[target_indep_variable] = independent_value_float
         output[dependent] = [target_indep_variable, prediction]
     print(prints)
-    return output
+    return ([output, input_values])
+
+def plot_graphs(data, best_eqns, predictions):
+    j = 0
+    for dependent, indep_eqn_corr in best_eqns.items():
+        x2, y2 = [], []
+        y = col_str_to_int(data, dependent)
+        independent = indep_eqn_corr[0]
+        x = col_str_to_int(data, independent)
+        for i in range(1, len(y)+1 ): #remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
+        x2array = pd.Series(x2)
+        y2array = pd.Series(y2)
+
+        #remove outliers
+        x_array_no_outliers = x2array[x2array.between(x2array.quantile(0.10), x2array.quantile(0.90))]
+        y_array_no_outliers = y2array[y2array.between(y2array.quantile(0.10), y2array.quantile(0.90))]
+        x_corresponding_list, y_corresponding_list = [], []
+        for i in x_array_no_outliers.index:
+            if i in y_array_no_outliers.index:
+                x_corresponding_list.append(x2array[i])
+                y_corresponding_list.append(y2array[i])
+        
+        prediction = predictions[0][dependent][1] #Predicted value for dependent variable (y axis)
+        selected_dependent = predictions[1][j] #Input value for each particular dependent variable (x axis)
+        j += 1 #Cycles through the input values
+
+        #Creating best lit line
+        eqn = np.polyfit(x_corresponding_list,y_corresponding_list, 1)
+        gradient = eqn[0]
+        intercept = eqn[1]
+        x_corresponding_array = np.array(x_corresponding_list)
+        fit = gradient * x_corresponding_array + intercept
+
+        #Plotting
+        fig = plt.figure()
+        ax = fig.subplots()
+        ax.plot(x_corresponding_list, fit, color = 'black', label = 'Linear fit') #Best fit line
+        ax.scatter(x_corresponding_list,y_corresponding_list, s = 1, label = 'Data points') #Individual data points
+        ax.plot(selected_dependent, prediction, 'rx', label = 'Selected Company', markersize = 10)
+
+        #Labelling the graph
+        ax.set_title(f'{dependent} against {independent}', fontsize = 'small')
+        ax.set_ylabel(f'{dependent}')
+        ax.set_xlabel(f'{independent}')
+        ax.legend()
+    plt.show()
+    return eqn
 
 #Function to do full analysis based on the best indep values with highest correl
 def auto_analysis(filename):
@@ -399,6 +462,7 @@ def auto_analysis(filename):
     all_r_sorted = sort_all_r(all_r)
     best_eqns = auto_eqn(data, all_r_sorted)
     predictions = auto_prediction(data, best_eqns, 1)
+    plot_graphs(data, best_eqns, predictions)
     return predictions
 
 def user_prediction(dataset, best_eqns, user_inputs):
@@ -435,7 +499,7 @@ def output_website(filename, user_inputs):
 #1. Testing standalone functions
 #insurance_data = create_data('Insurance Report.csv')
 chemicals_data = create_data('Chemicals Report.csv')
-#correl(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
+correl(chemicals_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #predict(eqn, 10)
@@ -444,15 +508,16 @@ chemicals_data = create_data('Chemicals Report.csv')
 dependents_and_independents = find_dependents_and_independents(chemicals_data)
 all_r = find_all_r(chemicals_data, independents, dependents)
 all_r_sorted = sort_all_r(all_r)
-#highest_correl(all_r)
+highest_correl(all_r)
+best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+predictions = auto_prediction(chemicals_data, best_eqns, 1)
 #equation = eqn_constructor(chemicals_data, all_r_sorted)
 #insurance_prediction = user_analysis('Insurance Report.csv')
 #chemicals_prediction = user_analysis('Chemicals Report.csv')
 #auto_eqn_and_prediction(chemicals_data, all_r_sorted)
-#best_eqns = auto_eqn(chemicals_data, all_r_sorted)
-#predicc = auto_prediction(chemicals_data, best_eqns, 1)
-temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
+#temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
+plot_graphs(chemicals_data, best_eqns, predictions)
 
 #2. Testing full functions
-#full_analysis = auto_analysis('Chemicals Report.csv')
+full_analysis = auto_analysis('Chemicals Report.csv')
 #full_analysis = auto_analysis('Insurance Report.csv')
