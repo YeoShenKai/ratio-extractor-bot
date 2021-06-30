@@ -21,9 +21,9 @@ def create_data(folder_name):
         print("ERROR: No data records available.")
         
     # Make the column header names into a separate record at the top of the table
-    top_row = pd.DataFrame(test_data.columns).T
-    top_row.columns = top_row.iloc[0]
-    df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
+    #top_row = pd.DataFrame(test_data.columns).T
+    #top_row.columns = top_row.iloc[0]
+    #df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
     
     return df_temp
 
@@ -50,7 +50,7 @@ def average(dataset, columnindex):
 #Calculate Price to Earnings Ratio (Day close / EPS) - inputs 2 columns and creates a new column with PE ratios
 def PE_ratio(dataset, EPS_col, day_close_col):
     PE_ratios = [] 
-    for i in range(1, len(dataset[EPS_col])+1):
+    for i in range(len(dataset[EPS_col])):
         if not isnumber(dataset[EPS_col][i]): #invalid value
             PE_ratios.append('-')
         elif not isnumber(dataset[day_close_col][i]): #invalid value in corresponding metric
@@ -62,7 +62,7 @@ def PE_ratio(dataset, EPS_col, day_close_col):
 #Convert all the values in the column from string to float - does not update original dataframe
 def col_str_to_int(dataset, col):
     temp = dataset[col]
-    for i in range(1, len(temp)+1 ):
+    for i in range(len(temp)):
         if isnumber(temp[i]):
             temp[i] = float(temp[i])
     return temp
@@ -72,7 +72,7 @@ def correl(dataset, dependent, independent):
     x2, y2 = [], []
     y = col_str_to_int(dataset, dependent)
     x = col_str_to_int(dataset, independent)
-    for i in range(1, len(y)+1 ): #remove blanks
+    for i in range(len(y)): #remove blanks
         if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
             x2.append(x[i])
@@ -143,7 +143,7 @@ def graph_function(dataset, dependent, independent):
     x2, y2 = [], []
     y = col_str_to_int(dataset, dependent)
     x = col_str_to_int(dataset, independent)
-    for i in range(1, len(y)+1 ): #remove blanks
+    for i in range(len(y)): #remove blanks
         if isnumber(y[i]) and isnumber(x[i]):
             y2.append(y[i])
             x2.append(x[i])
