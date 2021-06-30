@@ -19,8 +19,14 @@ def create_data(folder_name):
 
     if len(df_temp) == 0:
         print("ERROR: No data records available.")
-
+        
+    # Make the column header names into a separate record at the top of the table
+    top_row = pd.DataFrame(test_data.columns).T
+    top_row.columns = top_row.iloc[0]
+    df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
+    
     return df_temp
+
 
 # Check if a value in a cell is a float - returns False if cell is empty or NM
 def isnumber(string):
