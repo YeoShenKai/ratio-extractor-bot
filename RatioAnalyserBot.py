@@ -24,7 +24,6 @@ def create_data(folder_name):
     # top_row = pd.DataFrame(test_data.columns).T
     # top_row.columns = top_row.iloc[0]
     # df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
-
     return df_temp
 
 
@@ -81,17 +80,6 @@ def col_str_to_int(dataset, col):
         print(i)
         if isnumber(temp[i]):
             temp[i] = float(temp[i])
-    return temp
-
-def col_str_to_int(dataset, col):
-    temp = dataset[col]
-    for i in range(len(dataset)):
-        try:
-            temp[i]
-            if isnumber(temp[i]):
-                temp[i] = float(temp[i])
-        except:
-            continue
     return temp
 
 
@@ -554,7 +542,6 @@ def industry_filter(data, industry):
     filter = data['Industry Classifications'] == industry
     filtered_data = data[filter]
     filtered_data = filtered_data.reset_index(drop=True)
-    print(filtered_data)
     return filtered_data
 
 # Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
