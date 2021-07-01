@@ -1,9 +1,9 @@
-import os
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot as plt
 from numpy.testing._private.utils import tempdir
+
 
 
 # CSV file --> array. *Indexing: [columns][row]
@@ -30,6 +30,17 @@ def create_data(folder_name):
 
 
 # Check if a value in a cell is a float - returns False if cell is empty or NM
+
+#csv file --> array. *Indexing: [columns][row]
+def create_data_from_csv(filename):
+    df = pd.read_csv(filename, header = 1).values
+    df = pd.DataFrame(df)
+    df.columns = df.iloc[0] #set header
+    df = df.drop(df.index[0])
+    return df
+
+#Check if a value in a cell is a float - returns False if cell is empty or NM
+
 def isnumber(string):
     try:
         float(string)
@@ -528,11 +539,11 @@ def user_prediction(dataset, best_eqns, user_inputs):
         dct[dependent] = prediction
     return dct
 
-
 # Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
 # Solely for website
 def output_website(folder_location, user_inputs):
     # user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
+
     if len(user_inputs) != 7:
         print('Please enter all the required values.')
         return None
@@ -582,3 +593,4 @@ if __name__ == "__main__":
     now = datetime.now()
     results = output_website("data/", ["Chemicals", 1, 1, 1, 1, 1, 1])
     print(datetime.now() - now)
+
