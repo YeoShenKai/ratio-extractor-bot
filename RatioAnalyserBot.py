@@ -1,10 +1,9 @@
+import os
 import numpy as np
 import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot as plt
 from numpy.testing._private.utils import tempdir
-
-
 
 # CSV file --> array. *Indexing: [columns][row]
 def create_data(folder_name):
@@ -29,8 +28,6 @@ def create_data(folder_name):
     return df_temp
 
 
-# Check if a value in a cell is a float - returns False if cell is empty or NM
-
 #csv file --> array. *Indexing: [columns][row]
 def create_data_from_csv(filename):
     df = pd.read_csv(filename, header = 1).values
@@ -40,7 +37,6 @@ def create_data_from_csv(filename):
     return df
 
 #Check if a value in a cell is a float - returns False if cell is empty or NM
-
 def isnumber(string):
     try:
         float(string)
@@ -79,9 +75,23 @@ def PE_ratio(dataset, EPS_col, day_close_col):
 # Convert all the values in the column from string to float - does not update original dataframe
 def col_str_to_int(dataset, col):
     temp = dataset[col]
+    print(temp)
+    print(len(temp))
     for i in range(len(temp)):
+        print(i)
         if isnumber(temp[i]):
             temp[i] = float(temp[i])
+    return temp
+
+def col_str_to_int(dataset, col):
+    temp = dataset[col]
+    for i in range(len(dataset)):
+        try:
+            temp[i]
+            if isnumber(temp[i]):
+                temp[i] = float(temp[i])
+        except:
+            continue
     return temp
 
 
@@ -539,26 +549,33 @@ def user_prediction(dataset, best_eqns, user_inputs):
         dct[dependent] = prediction
     return dct
 
+#Filters by industry and resets index
+def industry_filter(data, industry):
+    filter = data['Industry Classifications'] == industry
+    filtered_data = data[filter]
+    filtered_data = filtered_data.reset_index(drop=True)
+    print(filtered_data)
+    return filtered_data
+
 # Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
 # Solely for website
 def output_website(folder_location, user_inputs):
     # user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
-
     if len(user_inputs) != 7:
         print('Please enter all the required values.')
         return None
 
-    # [TODO]: To ensure that data is filtered by industry
-    user_inputs = user_inputs[1:]
+    variable_values = user_inputs[1:]
     data = create_data(folder_location)
+    industry_data = industry_filter(data, user_inputs[0])
     dependents = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
     independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]',
                     'EBITDA Margin % [LTM]', \
                     'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
-    all_r = find_all_r(data, independents, dependents)
+    all_r = find_all_r(industry_data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
-    best_eqns = auto_eqn(data, all_r_sorted)
-    predictions = user_prediction(data, best_eqns, user_inputs)
+    best_eqns = auto_eqn(industry_data, all_r_sorted)
+    predictions = user_prediction(industry_data, best_eqns, variable_values)
     return predictions
 
 
@@ -591,6 +608,5 @@ if __name__ == "__main__":
     # full_analysis = auto_analysis('Insurance Report.csv')
 
     now = datetime.now()
-    results = output_website("data/", ["Chemicals", 1, 1, 1, 1, 1, 1])
+    results = output_website("data/", ["Health Care (Primary)", 10, 10, 10, 10, 10, 10])
     print(datetime.now() - now)
-
