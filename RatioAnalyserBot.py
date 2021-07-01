@@ -2,6 +2,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 from numpy.testing._private.utils import tempdir
 import pandas as pd
+import csv
+
+#csv file --> list
+def read_csv(filename):
+    rows = []
+    with open(filename) as csvfile:
+        file_reader = csv.reader(csvfile)
+        for row in file_reader:
+            rows.append(row)
+        rows = rows[2:]
+    return rows
 
 #csv file --> array. *Indexing: [columns][row]
 def create_data(filename):
@@ -10,6 +21,28 @@ def create_data(filename):
     df.columns = df.iloc[0] #set header
     df = df.drop(df.index[0])
     return df
+
+#Converts files into lists, combines them, then converts to an pandas array.
+def create_multiple_data(*filename):
+    data = []
+    for file in filename:
+        print(file)
+        indiv_data = read_csv(file)
+        if not data: #output is empty - create headers. If output is not empty, remove headers
+            data.append(indiv_data[0])
+        print(data)
+        data.extend(indiv_data[1:])
+    df = pd.DataFrame(data, columns = data[0])
+    df = df.drop(df.index[0])
+    return df
+
+def combine_df(*filenames):
+    all_data =[]
+    for file in filenames:
+        data = create_data(file)
+        all_data.append(data)
+    output = pd.concat(all_data)
+    return output
 
 #Check if a value in a cell is a float - returns False if cell is empty or NM
 def isnumber(string):
@@ -497,8 +530,9 @@ def output_website(filename, user_inputs):
  
 ####TEMP TESTING STUFF####
 #1. Testing standalone functions
-#insurance_data = create_data('Insurance Report.csv')
+insurance_data = create_data('Insurance Report.csv')
 chemicals_data = create_data('Chemicals Report.csv')
+combined_data = combine_df('Dataset 1.csv', 'Dataset 2.csv', 'Dataset 3.csv', 'Dataset 4.csv', 'Dataset 5.csv')
 correl(chemicals_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
 #highest_correl(all_r)
 #eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
