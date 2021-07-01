@@ -24,7 +24,6 @@ def create_data(folder_name):
     # top_row = pd.DataFrame(test_data.columns).T
     # top_row.columns = top_row.iloc[0]
     # df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
-
     return df_temp
 
 
@@ -75,23 +74,9 @@ def PE_ratio(dataset, EPS_col, day_close_col):
 # Convert all the values in the column from string to float - does not update original dataframe
 def col_str_to_int(dataset, col):
     temp = dataset[col]
-    print(temp)
-    print(len(temp))
     for i in range(len(temp)):
-        print(i)
         if isnumber(temp[i]):
             temp[i] = float(temp[i])
-    return temp
-
-def col_str_to_int(dataset, col):
-    temp = dataset[col]
-    for i in range(len(dataset)):
-        try:
-            temp[i]
-            if isnumber(temp[i]):
-                temp[i] = float(temp[i])
-        except:
-            continue
     return temp
 
 
@@ -120,23 +105,6 @@ def correl(dataset, dependent, independent):
         return round(r[0, 1], 5)
     else:
         return r
-
-
-# Determine all independent variables (secondary metrics), outputs as list. *OUTDATED
-def create_comparison(dataset,
-                      dependent):  # dependent --> core ratios to be compared to (e.g. PE, PB ratio), input as a sequence
-    comparison_bases = list(dataset.columns)
-    if not dependent:
-        print('No comparison bases')
-    for base in dependent:
-        comparison_bases.remove(base)
-    if 'Company Name' in comparison_bases:
-        comparison_bases.remove('Company Name')
-    if 'Exchange:Ticker' in comparison_bases:
-        comparison_bases.remove('Exchange:Ticker')
-    if 'Industry Classifications' in comparison_bases:
-        comparison_bases.remove('Industry Classifications')
-    return comparison_bases
 
 
 # find correlation between all independent and dependent variables
@@ -200,38 +168,6 @@ def predict(eqn, independent):
     model = np.poly1d(eqn)
     output = model(independent)
     return output
-
-
-# Find dependent and independent variables *OUTDATED - REFER TO FIND_DEPENDENTS AND FIND_INDEPENDENTS
-def user_input(dataset, all_r_sorted):
-    dependent = input('Please enter the dependent variable (e.g. PE Ratio, PB ratio). Enter "list" for a list of possible variables. \
-        Enter "exit" to stop the program \nDependent variable: ')
-    if dependent in all_r_sorted.keys():
-        for r in all_r_sorted[dependent]:
-            print(f'{r[0]}: {r[1]} correlation')
-            independent_value = input("Enter variable value, or 'NIL' to try the next best variable \n Value: ")
-            independent_value = float(independent_value)
-            if independent_value == 'NIL':
-                continue
-            else:
-                try:
-                    eqn = graph_function(dataset, dependent, r[0])
-                    prediction = predict(eqn, independent_value)
-                    print(
-                        f'With a {r[0]} value of {independent_value}, {dependent} is likely to be {round(prediction, 3)}')
-                    return prediction
-                except:
-                    print('Variable value entered incorrectly. Please restart the program')
-                    user_input(dataset, all_r_sorted)
-    elif dependent == 'list':
-        print(all_r_sorted.keys())
-        user_input(dataset, all_r_sorted)
-    elif dependent == 'exit':
-        print('Program stopped!')
-        return None
-    else:
-        print('Invalid dependent variable. Please check the exact name of dependent variable')
-        user_input(dataset, all_r_sorted)
 
 
 # Find the dependent variables, based on user inputs. Can optionally take in list of independent variables to reduce number of selections
@@ -474,6 +410,7 @@ def auto_prediction(dataset, best_eqns, show_correl=0):
     return ([output, input_values])
 
 
+#Creates matplotlib plots
 def plot_graphs(data, best_eqns, predictions):
     j = 0
     for dependent, indep_eqn_corr in best_eqns.items():
@@ -481,7 +418,9 @@ def plot_graphs(data, best_eqns, predictions):
         y = col_str_to_int(data, dependent)
         independent = indep_eqn_corr[0]
         x = col_str_to_int(data, independent)
-        for i in range(1, len(y) + 1):  # remove blanks
+        #print(len(y))
+        #print(y)
+        for i in range(1, len(y)):  # remove blanks
             if isnumber(y[i]) and isnumber(x[i]):
                 y2.append(y[i])
                 x2.append(x[i])
@@ -497,8 +436,10 @@ def plot_graphs(data, best_eqns, predictions):
                 x_corresponding_list.append(x2array[i])
                 y_corresponding_list.append(y2array[i])
 
+        print(predictions)
         prediction = predictions[0][dependent][1]  # Predicted value for dependent variable (y axis)
         selected_dependent = predictions[1][j]  # Input value for each particular dependent variable (x axis)
+        print(prediction, selected_dependent)
         j += 1  # Cycles through the input values
 
         # Creating best lit line
@@ -538,7 +479,7 @@ def auto_analysis(filename):
 
 def user_prediction(dataset, best_eqns, user_inputs):
     # user_inputs = [industry_type, revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital]
-    dct = {}
+    dct, input_values = {}, []
     independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]',
                     'EBITDA Margin % [LTM]', \
                     'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
@@ -547,14 +488,14 @@ def user_prediction(dataset, best_eqns, user_inputs):
         value = user_inputs[index]
         prediction = predict(indep_eqn_correl[1], value)
         dct[dependent] = prediction
-    return dct
+        input_values.append(value)
+    return ([dct, input_values])
 
 #Filters by industry and resets index
 def industry_filter(data, industry):
     filter = data['Industry Classifications'] == industry
     filtered_data = data[filter]
     filtered_data = filtered_data.reset_index(drop=True)
-    print(filtered_data)
     return filtered_data
 
 # Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
@@ -575,7 +516,9 @@ def output_website(folder_location, user_inputs):
     all_r = find_all_r(industry_data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
     best_eqns = auto_eqn(industry_data, all_r_sorted)
+    print(best_eqns)
     predictions = user_prediction(industry_data, best_eqns, variable_values)
+    plot_graphs(industry_data, best_eqns, predictions)
     return predictions
 
 
@@ -610,3 +553,6 @@ if __name__ == "__main__":
     now = datetime.now()
     results = output_website("data/", ["Health Care (Primary)", 10, 10, 10, 10, 10, 10])
     print(datetime.now() - now)
+
+#test_data = create_data('data/')
+#filtered_data = industry_filter(test_data, "Health Care (Primary)")
