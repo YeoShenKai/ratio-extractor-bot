@@ -5,7 +5,7 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 from numpy.testing._private.utils import tempdir
 
-# CSV file --> array. *Indexing: [columns][row]
+# Excel file --> array. *Indexing: [columns][row]
 def create_data(folder_name):
     df_temp = pd.DataFrame()
 
@@ -26,6 +26,13 @@ def create_data(folder_name):
     # df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
     return df_temp
 
+#CSV file --> array
+def create_data_from_csv(filename):
+    df = pd.read_csv(filename, header = 1).values
+    df = pd.DataFrame(df)
+    df.columns = df.iloc[0] #set header
+    df = df.drop(df.index[0])
+    return df
 
 #csv file --> array. *Indexing: [columns][row]
 def create_data_from_csv(filename):
@@ -74,9 +81,15 @@ def PE_ratio(dataset, EPS_col, day_close_col):
 # Convert all the values in the column from string to float - does not update original dataframe
 def col_str_to_int(dataset, col):
     temp = dataset[col]
-    for i in range(len(temp)):
-        if isnumber(temp[i]):
-            temp[i] = float(temp[i])
+    try: 
+        temp[0]
+        for i in range(len(temp)):
+            if isnumber(temp[i]):
+                temp[i] = float(temp[i])
+    except:
+        for i in range(1, len(temp)+1):
+            if isnumber(temp[i]):
+                temp[i] = float(temp[i])
     return temp
 
 
@@ -85,10 +98,17 @@ def correl(dataset, dependent, independent):
     x2, y2 = [], []
     y = col_str_to_int(dataset, dependent)
     x = col_str_to_int(dataset, independent)
-    for i in range(len(y)):  # remove blanks
-        if isnumber(y[i]) and isnumber(x[i]):
-            y2.append(y[i])
-            x2.append(x[i])
+    try:
+        y[0]
+        for i in range(len(y)):  # remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
+    except:
+        for i in range(1, len(y)+1):  # remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
     x_array = pd.Series(x2)
     y_array = pd.Series(y2)
     x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.10), x_array.quantile(0.90))]
@@ -145,10 +165,17 @@ def graph_function(dataset, dependent, independent):
     x2, y2 = [], []
     y = col_str_to_int(dataset, dependent)
     x = col_str_to_int(dataset, independent)
-    for i in range(len(y)):  # remove blanks
-        if isnumber(y[i]) and isnumber(x[i]):
-            y2.append(y[i])
-            x2.append(x[i])
+    try:
+        y[0]
+        for i in range(len(y)):  # remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
+    except:
+        for i in range(1, len(y)+1 ):  # remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
     x_array = pd.Series(x2)
     y_array = pd.Series(y2)
     x_array_no_outliers = x_array[x_array.between(x_array.quantile(0.10), x_array.quantile(0.90))]
@@ -418,8 +445,6 @@ def plot_graphs(data, best_eqns, predictions):
         y = col_str_to_int(data, dependent)
         independent = indep_eqn_corr[0]
         x = col_str_to_int(data, independent)
-        #print(len(y))
-        #print(y)
         for i in range(1, len(y)):  # remove blanks
             if isnumber(y[i]) and isnumber(x[i]):
                 y2.append(y[i])
@@ -436,10 +461,8 @@ def plot_graphs(data, best_eqns, predictions):
                 x_corresponding_list.append(x2array[i])
                 y_corresponding_list.append(y2array[i])
 
-        print(predictions)
         prediction = predictions[0][dependent][1]  # Predicted value for dependent variable (y axis)
         selected_dependent = predictions[1][j]  # Input value for each particular dependent variable (x axis)
-        print(prediction, selected_dependent)
         j += 1  # Cycles through the input values
 
         # Creating best lit line
@@ -461,7 +484,7 @@ def plot_graphs(data, best_eqns, predictions):
         ax.set_ylabel(f'{dependent}')
         ax.set_xlabel(f'{independent}')
         ax.legend()
-    plt.show()
+    plt.show(block=False)
     return eqn
 
 
@@ -487,7 +510,7 @@ def user_prediction(dataset, best_eqns, user_inputs):
         index = independents.index(indep_eqn_correl[0])
         value = user_inputs[index]
         prediction = predict(indep_eqn_correl[1], value)
-        dct[dependent] = prediction
+        dct[dependent] = [indep_eqn_correl[0], prediction]
         input_values.append(value)
     return ([dct, input_values])
 
@@ -516,7 +539,6 @@ def output_website(folder_location, user_inputs):
     all_r = find_all_r(industry_data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
     best_eqns = auto_eqn(industry_data, all_r_sorted)
-    print(best_eqns)
     predictions = user_prediction(industry_data, best_eqns, variable_values)
     plot_graphs(industry_data, best_eqns, predictions)
     return predictions
@@ -525,20 +547,21 @@ def output_website(folder_location, user_inputs):
 if __name__ == "__main__":
     ####TEMP TESTING STUFF####
     # 1. Testing standalone functions
-    # insurance_data = create_data('Insurance Report.csv')
-    # test_data = create_data('data/')
+    #insurance_data = create_data_from_csv('Insurance Report.csv')
+    #test_data = create_data('data/')
+    #chemicals_data = create_data_from_csv('Chemicals Report.csv')
     # correl(test_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
     # highest_correl(all_r)
     # eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
     # predict(eqn, 10)
     # dependents = find_dependents(data)
     # independents = find_independents(data, dependents)
-    # dependents_and_independents = find_dependents_and_independents(chemicals_data)
-    # all_r = find_all_r(test_data, independents, dependents)
-    # all_r_sorted = sort_all_r(all_r)
+    #dependents_and_independents = find_dependents_and_independents(chemicals_data)
+    #all_r = find_all_r(chemicals_data, independents, dependents)
+    #all_r_sorted = sort_all_r(all_r)
     # highest_correl(all_r)
-    # best_eqns = auto_eqn(test_data, all_r_sorted)
-    # predictions = auto_prediction(test_data, best_eqns, 1)
+    #best_eqns = auto_eqn(chemicals_data, all_r_sorted)
+    #predictions = auto_prediction(chemicals_data, best_eqns, 1)
     # equation = eqn_constructor(chemicals_data, all_r_sorted)
     # insurance_prediction = user_analysis('Insurance Report.csv')
     # chemicals_prediction = user_analysis('Chemicals Report.csv')
@@ -551,7 +574,7 @@ if __name__ == "__main__":
     # full_analysis = auto_analysis('Insurance Report.csv')
 
     now = datetime.now()
-    results = output_website("data/", ["Health Care (Primary)", 10, 10, 10, 10, 10, 10])
+    results = output_website("data/", ["Health Care (Primary)", 10, 10, 10, 10, 1, 10])
     print(datetime.now() - now)
 
 #test_data = create_data('data/')
