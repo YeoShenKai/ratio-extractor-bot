@@ -5,6 +5,12 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 from numpy.testing._private.utils import tempdir
 
+#For web plotting
+import base64
+from io import BytesIO
+from flask import Flask
+from matplotlib.figure import Figure
+
 # Excel file --> array. *Indexing: [columns][row]
 def create_data(folder_name):
     df_temp = pd.DataFrame()
@@ -521,6 +527,9 @@ def industry_filter(data, industry):
     filtered_data = filtered_data.reset_index(drop=True)
     return filtered_data
 
+def get_industries(data):
+    return list(data['Industry Classifications'].unique())
+
 # Takes in a set number of values for some fixed independent variables, and returns a dictionary with key: dependent variable and value: best prediction
 # Solely for website
 def output_website(folder_location, user_inputs):
@@ -531,6 +540,7 @@ def output_website(folder_location, user_inputs):
 
     variable_values = user_inputs[1:]
     data = create_data(folder_location)
+    global industry_data
     industry_data = industry_filter(data, user_inputs[0])
     dependents = ['P/LTM Diluted EPS Before Extra [Latest] (x)', 'P/BV [Latest] (x)']
     independents = ['Total Revenues, 3 Yr CAGR % [LTM] (%)', 'Return on Equity % [LTM]', 'Current Ratio [LTM]',
@@ -538,18 +548,75 @@ def output_website(folder_location, user_inputs):
                     'Total Asset Turnover [Latest Annual]', 'Total Debt/Capital % [Latest Annual]']
     all_r = find_all_r(industry_data, independents, dependents)
     all_r_sorted = sort_all_r(all_r)
+    global best_eqns
+    global predictions
     best_eqns = auto_eqn(industry_data, all_r_sorted)
     predictions = user_prediction(industry_data, best_eqns, variable_values)
-    plot_graphs(industry_data, best_eqns, predictions)
+    #plot_graphs(industry_data, best_eqns, predictions)
+    #return web_plot(industry_data, best_eqns, predictions)
     return predictions
+
+def web_plot(data, best_eqns, predictions):
+    j = 0
+    for dependent, indep_eqn_corr in best_eqns.items():
+        x2, y2 = [], []
+        y = col_str_to_int(data, dependent)
+        independent = indep_eqn_corr[0]
+        x = col_str_to_int(data, independent)
+        for i in range(1, len(y)):  # remove blanks
+            if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
+        x2array = pd.Series(x2)
+        y2array = pd.Series(y2)
+
+        # remove outliers
+        x_array_no_outliers = x2array[x2array.between(x2array.quantile(0.10), x2array.quantile(0.90))]
+        y_array_no_outliers = y2array[y2array.between(y2array.quantile(0.10), y2array.quantile(0.90))]
+        x_corresponding_list, y_corresponding_list = [], []
+        for i in x_array_no_outliers.index:
+            if i in y_array_no_outliers.index:
+                x_corresponding_list.append(x2array[i])
+                y_corresponding_list.append(y2array[i])
+
+        prediction = predictions[0][dependent][1]  # Predicted value for dependent variable (y axis)
+        selected_dependent = predictions[1][j]  # Input value for each particular dependent variable (x axis)
+        j += 1  # Cycles through the input values
+
+        # Creating best lit line
+        eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
+        gradient = eqn[0]
+        intercept = eqn[1]
+        x_corresponding_array = np.array(x_corresponding_list)
+        fit = gradient * x_corresponding_array + intercept
+
+        # Plotting
+        fig = Figure()
+        ax = fig.subplots()
+        ax.plot(x_corresponding_list, fit, color='black', label='Linear fit')  # Best fit line
+        ax.scatter(x_corresponding_list, y_corresponding_list, s=1, label='Data points')  # Individual data points
+        ax.plot(selected_dependent, prediction, 'rx', label='Selected Company', markersize=10)
+
+        # Labelling the graph
+        ax.set_title(f'{dependent} against {independent}', fontsize='small')
+        ax.set_ylabel(f'{dependent}')
+        ax.set_xlabel(f'{independent}')
+        ax.legend()
+
+        buf = BytesIO()
+        fig.savefig(buf, format="png")
+        data = base64.b64encode(buf.getbuffer()).decode("ascii")
+        return f"<img src='data:image/png;base64,{data}'/>"
+
 
 
 if __name__ == "__main__":
+    print('hello')
     ####TEMP TESTING STUFF####
     # 1. Testing standalone functions
     #insurance_data = create_data_from_csv('Insurance Report.csv')
-    #test_data = create_data('data/')
-    #chemicals_data = create_data_from_csv('Chemicals Report.csv')
+    test_data = create_data('data/')
+    chemicals_data = create_data_from_csv('Chemicals Report.csv')
     # correl(test_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
     # highest_correl(all_r)
     # eqn = graph_function(data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
@@ -579,3 +646,5 @@ if __name__ == "__main__":
 
 #test_data = create_data('data/')
 #filtered_data = industry_filter(test_data, "Health Care (Primary)")
+#get_industries(chemicals_data)
+#get_industries(test_data)
