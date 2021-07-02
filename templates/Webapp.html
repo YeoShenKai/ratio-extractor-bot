@@ -7,6 +7,9 @@
         .inputs {
             font-size: 150%;
         }
+        .results {
+            font-size: 150%
+        }
         option {
             font-size: 100%;
         }
@@ -34,6 +37,7 @@
 </div>
 
 <div class = "inputs">
+    <!--
     <h3> Choose your industry: </h3>
     <form>
         <input type = "radio" id = "Health Care (Primary)" name = "industry">
@@ -43,15 +47,16 @@
     </form>
     <br>
     <form>
+        -->
+    </form>
+    <br>
+    <form action="" method="get">
         <label for = "industry"> Choose your industry: </label>
         <br>
         <select id = "industry" name = "industry" style = "font-size: 110%;">
             <option value = "Health Care (Primary)"> Health Care (Primary) </option>
             <option value = "Financials (Primary)"> Financials (Primary) </option>
         </select>
-    </form>
-    <br>
-    <form action="" method="get">
         <table>
             <tr>
                 <td><label for = "rev_growth"> Total Revenue Growth, 3 Year CAGR %: </label></td>
@@ -83,7 +88,11 @@
         <input type = "reset" style = "font-size: 100%;">
     </form>
 </div>
-
+<script type="number/javascript">
+    document.getElementById('industry').value = "<?php echo $_GET['industry'];?>";
+</script>
+  
+<!--
 <div class = "results">
     <p> Selected Industry: </p> 
     + selection_industry_type
@@ -93,5 +102,6 @@
     <p> The estimated P/B ratio is  </p>
     + predictions["P/BV [Latest] (x)"]
 </div>
+-->
 
 </html>

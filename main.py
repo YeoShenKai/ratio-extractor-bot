@@ -4,10 +4,11 @@ from RatioAnalyserBot import output_website
 
 app = Flask(__name__)
 
-
+print('hello')
 @app.route("/")
 def index():
     # Obtain the relevant inputs from the user
+    print('hello')
     selection_industry_type = request.args.get("selection_industry_type", "")
 
     try:
