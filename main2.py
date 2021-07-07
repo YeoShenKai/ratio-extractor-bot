@@ -9,10 +9,10 @@ from matplotlib.figure import Figure
 
 app = Flask(__name__)
 
-#Activate venv: .\venv\Scripts\activate
+#Activate venv: venv\Scripts\activate
 
 @app.route("/")
-def index():
+def index(): #Fix url upon publish
     selection_industry_type = request.args.get("industry", "")
     print(selection_industry_type)
 
@@ -48,28 +48,26 @@ def index():
     predictions = output_website("Chemicals Report.csv", user_inputs)
     predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"] = str(round(predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"], 2))
     predictions["P/BV [Latest] (x)"] = str(round(predictions["P/BV [Latest] (x)"], 1))
-    
     '''
-    return (
-        render_template('webapp.html')
-        + f' \
-        <div class = "results">\
+
+    def output():
+        return (f'\
+            <div class = "results">\
             <p> Selected Industry:  {selection_industry_type} </p> \
             <p> The estimated P/E ratio is: {predictions[0]["P/LTM Diluted EPS Before Extra [Latest] (x)"][1]} </p> \
             <p> The estimated P/B ratio is: {predictions[0]["P/BV [Latest] (x)"][1]} </p>\
-        </div>'
+        </div>\
+    ')
+
+    outputs = output()
+    return (
+        render_template('webapp.html') + outputs
     )
 
-    '''
-    '<p> Selected Industry: </p>'
-    + selection_industry_type
-    + '<p> The estimated P/E ratio is </p>'
-    + predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"]
-    + '<br>'
-    + '<p> The estimated P/B ratio is  </p>'
-    + predictions["P/BV [Latest] (x)"]
-    '''
-    
+#Graph: Seperate url?
+@app.route("/graph")
+def print_graphs():
+    return ('hello world')
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)
