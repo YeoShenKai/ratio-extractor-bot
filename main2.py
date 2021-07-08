@@ -25,8 +25,12 @@ def index(): #Fix url upon publish
         total_debt_capital = float(request.args.get("total_debt_capital", ""))
         user_inputs = [selection_industry_type, total_revenue_growth, return_on_equity, current_ratio,
                        ebitda_margin, total_asset_turnover, total_debt_capital]
-        predictions = output_website("data/", user_inputs)
+        global besteqns_predictions
+        besteqns_predictions = output_website("data/", user_inputs)
+        besteqns = besteqns_predictions[0]
+        predictions = besteqns_predictions[1]
         #predictions = {'P/LTM Diluted EPS Before Extra [Latest] (x)': 'TEST1', 'P/BV [Latest] (x)': 'TEST2'}
+        print(besteqns_predictions)
     except:
         total_revenue_growth = None
         return_on_equity = None
@@ -39,8 +43,8 @@ def index(): #Fix url upon publish
         predictions[0]["P/LTM Diluted EPS Before Extra [Latest] (x)"] = ['not available', 'not available']
         predictions[0]["P/BV [Latest] (x)"] = ['not available', 'not available']
 
-    print(predictions[1])
-    print(total_revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital)
+    #print(predictions[1])
+    #print(total_revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital)
 
     '''
     user_inputs = [selection_industry_type, total_revenue_growth, return_on_equity, current_ratio, \
@@ -66,8 +70,22 @@ def index(): #Fix url upon publish
 
 #Graph: Seperate url?
 @app.route("/graph")
-def print_graphs():
-    return ('hello world')
+def plots():
+    return web_plot("data/", besteqns_predictions[0], besteqns_predictions[1])
+
+'''
+def hello():
+    # Generate the figure **without using pyplot**.
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot([1, 2])
+    # Save it to a temporary buffer.
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    # Embed the result in the html output.
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f"<img src='data:image/png;base64,{data}'/>"
+'''
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)

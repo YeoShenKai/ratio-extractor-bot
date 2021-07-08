@@ -554,10 +554,11 @@ def output_website(folder_location, user_inputs):
     predictions = user_prediction(industry_data, best_eqns, variable_values)
     #plot_graphs(industry_data, best_eqns, predictions)
     #return web_plot(industry_data, best_eqns, predictions)
-    return predictions
+    return [best_eqns, predictions]
 
-def web_plot(data, best_eqns, predictions):
+def web_plot(folder_location, best_eqns, predictions):
     j = 0
+    data = create_data(folder_location)
     for dependent, indep_eqn_corr in best_eqns.items():
         x2, y2 = [], []
         y = col_str_to_int(data, dependent)
