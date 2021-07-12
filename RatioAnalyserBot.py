@@ -552,7 +552,7 @@ def output_website(folder_location, user_inputs):
     global predictions
     best_eqns = auto_eqn(industry_data, all_r_sorted)
     predictions = user_prediction(industry_data, best_eqns, variable_values)
-    #plot_graphs(industry_data, best_eqns, predictions)
+    plot_graphs(industry_data, best_eqns, predictions)
     #return web_plot(industry_data, best_eqns, predictions)
     return [best_eqns, predictions]
 
@@ -609,7 +609,65 @@ def web_plot(folder_location, best_eqns, predictions):
         data = base64.b64encode(buf.getbuffer()).decode("ascii")
         return f"<img src='data:image/png;base64,{data}'/>"
 
+def web_plot_2(folder_location, best_eqns, predictions, plottype):
+    data = create_data(folder_location)
+    data = industry_filter(data, plottype)
+    print('filtered data len', len(data))
+    target_best_eqn = best_eqns[plottype]
+    #target_prediction = predictions[plottype]
+    x2, y2 = [], []
+    y = col_str_to_int(data, plottype)
+    independent = target_best_eqn[0]
+    x = col_str_to_int(data, independent)
+    for i in range(1, len(y)):
+        if isnumber(y[i]) and isnumber(x[i]):
+                y2.append(y[i])
+                x2.append(x[i])
+    x2array = pd.Series(x2)
+    y2array = pd.Series(y2)
+    print('x2y2 array len', len(x2array), len(y2array))
 
+    # remove outliers
+    x_array_no_outliers = x2array[x2array.between(x2array.quantile(0.10), x2array.quantile(0.90))]
+    y_array_no_outliers = y2array[y2array.between(y2array.quantile(0.10), y2array.quantile(0.90))]
+    x_corresponding_list, y_corresponding_list = [], []
+    for i in x_array_no_outliers.index:
+        if i in y_array_no_outliers.index:
+            x_corresponding_list.append(x2array[i])
+            y_corresponding_list.append(y2array[i])
+    print('no outlier len', len(x_corresponding_list), len(y_corresponding_list))
+
+    prediction = predictions[0][plottype][1]  # Predicted value for dependent variable (y axis)
+    print('prediction', prediction)
+        
+    # Creating best lit line
+    eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
+    gradient = eqn[0]
+    intercept = eqn[1]
+    x_corresponding_array = np.array(x_corresponding_list)
+    print(x_corresponding_array)
+    print(len(x_corresponding_array))
+    fit = gradient * x_corresponding_array + intercept
+
+    # Plotting
+    #fig = plt.figure()
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot(x_corresponding_list, fit, color='black', label='Linear fit')  # Best fit line
+    ax.scatter(x_corresponding_list, y_corresponding_list, s=1, label='Data points')  # Individual data points
+    ax.plot(plottype, prediction, 'rx', label='Selected Company', markersize=10)
+
+    # Labelling the graph
+    ax.set_title(f'{plottype} against {independent}', fontsize='small')
+    ax.set_ylabel(f'{plottype}')
+    ax.set_xlabel(f'{independent}')
+    ax.legend()
+    
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f"<img src='data:image/png;base64,{data}'/>"
+    
 
 if __name__ == "__main__":
     print('hello')
@@ -617,6 +675,7 @@ if __name__ == "__main__":
     # 1. Testing standalone functions
     #insurance_data = create_data_from_csv('Insurance Report.csv')
     test_data = create_data('data/')
+    test_data_filtered = industry_filter(test_data, 'Health Care (Primary)')
     chemicals_data = create_data_from_csv('Chemicals Report.csv')
     # correl(test_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
     # highest_correl(all_r)
@@ -624,18 +683,19 @@ if __name__ == "__main__":
     # predict(eqn, 10)
     # dependents = find_dependents(data)
     # independents = find_independents(data, dependents)
-    #dependents_and_independents = find_dependents_and_independents(chemicals_data)
-    #all_r = find_all_r(chemicals_data, independents, dependents)
-    #all_r_sorted = sort_all_r(all_r)
+    dependents_and_independents = find_dependents_and_independents(test_data_filtered)
+    all_r = find_all_r(test_data_filtered, independents, dependents)
+    all_r_sorted = sort_all_r(all_r)
     # highest_correl(all_r)
-    #best_eqns = auto_eqn(chemicals_data, all_r_sorted)
-    #predictions = auto_prediction(chemicals_data, best_eqns, 1)
+    best_eqns = auto_eqn(test_data_filtered, all_r_sorted)
+    predictions = auto_prediction(test_data_filtered, best_eqns, 1)
     # equation = eqn_constructor(chemicals_data, all_r_sorted)
     # insurance_prediction = user_analysis('Insurance Report.csv')
     # chemicals_prediction = user_analysis('Chemicals Report.csv')
     # auto_eqn_and_prediction(chemicals_data, all_r_sorted)
     # temp_result = output_website('Chemicals Report.csv', ["Chemicals",1,1,1,1,1,1])
-    # plot_graphs(test_data, best_eqns, predictions)
+    plot_graphs(test_data_filtered, best_eqns, predictions)
+    web_plot_2('data/', best_eqns, predictions, 'P/LTM Diluted EPS Before Extra [Latest] (x)')
 
     # 2. Testing full functions
     # full_analysis = auto_analysis('Chemicals Report.csv')

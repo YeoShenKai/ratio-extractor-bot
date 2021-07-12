@@ -4,7 +4,8 @@ from io import BytesIO
 from flask import Flask
 from flask import request
 from flask.templating import render_template
-from RatioAnalyserBot import output_website, web_plot
+from matplotlib.pyplot import plot
+from RatioAnalyserBot import output_website, web_plot, web_plot_2
 from matplotlib.figure import Figure
 
 app = Flask(__name__)
@@ -71,7 +72,16 @@ def index(): #Fix url upon publish
 #Graph: Seperate url?
 @app.route("/graph")
 def plots():
-    return web_plot("data/", besteqns_predictions[0], besteqns_predictions[1])
+    plot_selection = request.args.get("plottype", "")
+    if plot_selection:
+        print('plot selection', plot_selection)
+        plot_output = web_plot_2("data/", besteqns_predictions[0], besteqns_predictions[1], plot_selection)
+    else:
+        plot_selection = 'None'
+        print('Plot selection none')
+        plot_output = 'Please select a plot type'
+    
+    return render_template('plotpage.html') + plot_output + plot_selection
 
 '''
 def hello():
