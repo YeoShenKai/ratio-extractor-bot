@@ -478,6 +478,11 @@ def plot_graphs(data, best_eqns, predictions):
         x_corresponding_array = np.array(x_corresponding_list)
         fit = gradient * x_corresponding_array + intercept
 
+        print('x len', len(x_corresponding_list))
+        print('y len', len(y_corresponding_list))
+        print('gradient', gradient)
+        print('intercept', intercept)
+
         # Plotting
         fig = plt.figure()
         ax = fig.subplots()
@@ -552,7 +557,7 @@ def output_website(folder_location, user_inputs):
     global predictions
     best_eqns = auto_eqn(industry_data, all_r_sorted)
     predictions = user_prediction(industry_data, best_eqns, variable_values)
-    plot_graphs(industry_data, best_eqns, predictions)
+    #plot_graphs(industry_data, best_eqns, predictions)
     #return web_plot(industry_data, best_eqns, predictions)
     return [best_eqns, predictions]
 
@@ -609,10 +614,9 @@ def web_plot(folder_location, best_eqns, predictions):
         data = base64.b64encode(buf.getbuffer()).decode("ascii")
         return f"<img src='data:image/png;base64,{data}'/>"
 
-def web_plot_2(folder_location, best_eqns, predictions, plottype):
+def web_plot_2(folder_location, best_eqns, predictions, plottype, industry, user_input_values):
     data = create_data(folder_location)
-    data = industry_filter(data, plottype)
-    print('filtered data len', len(data))
+    data = industry_filter(data, industry)
     target_best_eqn = best_eqns[plottype]
     #target_prediction = predictions[plottype]
     x2, y2 = [], []
@@ -625,7 +629,6 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype):
                 x2.append(x[i])
     x2array = pd.Series(x2)
     y2array = pd.Series(y2)
-    print('x2y2 array len', len(x2array), len(y2array))
 
     # remove outliers
     x_array_no_outliers = x2array[x2array.between(x2array.quantile(0.10), x2array.quantile(0.90))]
@@ -635,19 +638,22 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype):
         if i in y_array_no_outliers.index:
             x_corresponding_list.append(x2array[i])
             y_corresponding_list.append(y2array[i])
-    print('no outlier len', len(x_corresponding_list), len(y_corresponding_list))
+    #print('no outlier len', len(x_corresponding_list), len(y_corresponding_list))
 
     prediction = predictions[0][plottype][1]  # Predicted value for dependent variable (y axis)
-    print('prediction', prediction)
+    #print('prediction', prediction)
         
     # Creating best lit line
     eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
     gradient = eqn[0]
     intercept = eqn[1]
     x_corresponding_array = np.array(x_corresponding_list)
-    print(x_corresponding_array)
-    print(len(x_corresponding_array))
+    #print(x_corresponding_array)
+    #print('x len', len(x_corresponding_list))
+    #print('gradient', gradient)
+    #print('intercept', intercept)
     fit = gradient * x_corresponding_array + intercept
+    user_input_val = user_input_values[best_eqns[plottype][0]]
 
     # Plotting
     #fig = plt.figure()
@@ -655,7 +661,7 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype):
     ax = fig.subplots()
     ax.plot(x_corresponding_list, fit, color='black', label='Linear fit')  # Best fit line
     ax.scatter(x_corresponding_list, y_corresponding_list, s=1, label='Data points')  # Individual data points
-    ax.plot(plottype, prediction, 'rx', label='Selected Company', markersize=10)
+    ax.plot(user_input_val, prediction, 'rx', label='Selected Company', markersize=10)
 
     # Labelling the graph
     ax.set_title(f'{plottype} against {independent}', fontsize='small')
