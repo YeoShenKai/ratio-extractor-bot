@@ -6,7 +6,7 @@ from flask import request
 from flask.templating import render_template
 from flask.typing import ResponseReturnValue
 from matplotlib.pyplot import plot
-from RatioAnalyserBot import output_website, web_plot, web_plot_2
+from RatioAnalyserBot import output_website, web_plot_2, create_data, find_unique_industries
 from matplotlib.figure import Figure
 
 app = Flask(__name__)
@@ -34,7 +34,7 @@ def index(): #Fix url upon publish
         besteqns = besteqns_predictions[0]
         predictions = besteqns_predictions[1]
         #predictions = {'P/LTM Diluted EPS Before Extra [Latest] (x)': 'TEST1', 'P/BV [Latest] (x)': 'TEST2'}
-        print(besteqns_predictions)
+        #print(besteqns_predictions)
 
         global user_input_values
         user_input_values = {}
@@ -59,6 +59,21 @@ def index(): #Fix url upon publish
     #print(predictions[1])
     #print(total_revenue_growth, return_on_equity, current_ratio, ebitda_margin, total_asset_turnover, total_debt_capital)
 
+    def industry_input():
+        data = create_data('data/')
+        unique_industries = find_unique_industries(data)
+        industry_selection = ''
+        for industry in unique_industries:
+            industry_selection += f'<option value = "{industry}"> {industry} </option>\n'
+        return (f'\
+            <form action="" method="get">\
+            <label for = "industry"> Choose your industry: </label>\
+            <br>\
+            <select id = "industry" name = "industry" style = "font-size: 110%;">\
+                {industry_selection}\
+        </select>\
+    ')
+
     def output():
         return (f'\
             <div class = "results">\
@@ -72,9 +87,10 @@ def index(): #Fix url upon publish
         </div>\
     ')
 
+    industry_user_input = industry_input()
     outputs = output()
     return (
-        render_template('webapp.html') + outputs
+        render_template('webapp1.html') + industry_user_input + render_template('webapp2.html') + outputs
     )
 
 @app.route("/graph")
@@ -90,10 +106,6 @@ def plots():
         return render_template('plotpage.html') + plot_output
     except:
         return render_template('plotpage-error.html')
-
-@app.route("/test")
-def test():
-    return('hello world')
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=8080, debug=True)
