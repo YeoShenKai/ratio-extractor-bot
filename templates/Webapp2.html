@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-    <title> Price Multiples Estimation </title>
+    <title> Savills Price Multiples Estimation </title>
     <style>
         body {background-color: white;}
         .inputs {
@@ -14,7 +14,11 @@
             font-size: 100%;
         }
         input[type="number"] {
-            height: 20px
+            height: 20px;
+            width: 80px
+        }
+        label {
+            font-size: min(5vw, 30px)
         }
     </style>
     <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
@@ -22,7 +26,7 @@
 
 <div class = "inputs">
     <br>
-    <form>
+    <form method="get">
         <table>
             <tr>
                 <td><label for = "rev_growth"> Total Revenue Growth, 3 Year CAGR %: </label></td>
