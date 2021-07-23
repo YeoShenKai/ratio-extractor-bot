@@ -77,12 +77,12 @@ def index(): #Fix url upon publish
     def output():
         return (f'\
             <div class = "results">\
-            <p> Selected Industry:  {selection_industry_type} </p> \
-            <p> The estimated P/E ratio is: {predictions[0]["P/LTM Diluted EPS Before Extra [Latest] (x)"][1]} </p> \
-            <p> The estimated P/B ratio is: {predictions[0]["P/BV [Latest] (x)"][1]} </p>\
+            <p> Selected Industry: <br><b> {selection_industry_type} </b></p> \
+            <p> The estimated P/E ratio is: <br><b> {predictions[0]["P/LTM Diluted EPS Before Extra [Latest] (x)"][1]} </b></p> \
+            <p> The estimated P/B ratio is: <br><b> {predictions[0]["P/BV [Latest] (x)"][1]} </b></p>\
         </div>\
         <div class = "plots">\
-            <h2> Visualise the data! </h2>\
+            <p> Visualise the data! </p>\
             <button onclick="window.location.href = \'/graph\'" style="font-size: 100%;"> Plots </button>\
         </div>\
     ')
