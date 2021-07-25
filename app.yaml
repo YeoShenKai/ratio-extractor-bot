@@ -1,1 +1,2 @@
-runtime: python38
+runtime: python39
+instance_class: F2

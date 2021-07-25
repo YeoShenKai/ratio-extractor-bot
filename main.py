@@ -90,7 +90,7 @@ def index(): #Fix url upon publish
     industry_user_input = industry_input()
     outputs = output()
     return (
-        render_template('webapp1.html') + industry_user_input + render_template('webapp2.html') + outputs
+        render_template("Webapp1.html") + industry_user_input + render_template("Webapp2.html") + outputs
     )
 
 @app.route("/graph")
@@ -105,6 +105,7 @@ def plots():
             plot_output = 'Please select a plot type'    
         return render_template('plotpage.html') + plot_output
     except:
+        # [TODO]: Please check what are the type of errors that are supposed to be caught here
         return render_template('plotpage-error.html')
 
 if __name__ == "__main__":
