@@ -44,7 +44,7 @@ def index(): #Fix url upon publish
             if indeps_eqn_corr[0] not in user_input_values:
                 user_input_values[indeps_eqn_corr[0]] = input_value
         
-    except:
+    except ValueError:
         total_revenue_growth = None
         return_on_equity = None
         total_asset_turnover = None
@@ -96,7 +96,6 @@ def index(): #Fix url upon publish
 @app.route("/graph")
 def plots():
     try: 
-        besteqns_predictions
         plot_selection = request.args.get("plottype", "")
         if plot_selection:
             plot_output = web_plot_2("data/", besteqns_predictions[0], besteqns_predictions[1], plot_selection, selection_industry_type, user_input_values)
@@ -104,8 +103,8 @@ def plots():
             plot_selection = 'None'
             plot_output = 'Please select a plot type'    
         return render_template('plotpage.html') + plot_output
-    except:
-        # [TODO]: Please check what are the type of errors that are supposed to be caught here
+    except Exception as e:
+        print(e)
         return render_template('plotpage-error.html')
 
 if __name__ == "__main__":
