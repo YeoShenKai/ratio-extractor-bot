@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <title> Savills Price Multiples Estimation </title>
+    <style>
+        body {background-color: white;}
+        .inputs {
+            font-size: 150%;
+        }
+        .results {
+            font-size: 150%
+        }
+        option {
+            font-size: 100%;
+        }
+        input[type="number"] {
+            height: 20px;
+            width: 80px
+        }
+        label {
+            font-size: min(5vw, 30px)
+        }
+    </style>
+    <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
+</head>
+
+<div class = "inputs">
+    <br>
+    <form method="get">
+        <table>
+            <tr>
+                <td><label for = "rev_growth"> Total Revenue Growth, 3 Year CAGR %: </label></td>
+                <td><input type="number" name="total_revenue_growth" id = "rev_growth" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            </tr>
+            <tr>
+                <td><label for = "roe"> Return on Equity %: </label></td>
+                <td><input type="number" name="return_on_equity" id = "roe" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            </tr>
+            <tr>
+                <td><label for = "currentratio"> Current Ratio: </label></td>
+                <td><input type="number" name="current_ratio" id = "currentratio" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            </tr>
+            <tr>
+                <td><label for = "ebitdamargin"> EBITDA Margin %: </label></td>
+                <td><input type="number" name="ebitda_margin" id = "ebitdamargin" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            </tr>
+            <tr>
+                <td><label for = "tat"> Total Asset Turnover: </label></td>
+                <td><input type="number" name="total_asset_turnover" id = "tat" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            <tr>
+            <tr>
+                <td><label for = "debt/cap"> Total Debt / Capital %: </label></td>
+                <td><input type="number" name="total_debt_capital" id = "debt/cap" placeholder=0.0 step=0.1 pattern="^\d*(\.\d{0,2})?$"/></td>
+            <tr>
+        </table>
+        <br>
+        <input type = "submit" value = "Generate Price Multiples" style = "font-size: 100%;"> 
+        <input type = "reset" style = "font-size: 100%;">
+    </form>
+</div>
+  
+<!--
+<div class = "results">
+    <p> Selected Industry: </p> 
+    + selection_industry_type
+    <p> The estimated P/E ratio is  </p>
+    + predictions["P/LTM Diluted EPS Before Extra [Latest] (x)"]
+    <br>
+    <p> The estimated P/B ratio is  </p>
+    + predictions["P/BV [Latest] (x)"]
+</div>
+-->
+
+</html>

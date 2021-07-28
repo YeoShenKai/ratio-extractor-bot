@@ -671,9 +671,26 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype, industry, user
     
     buf = BytesIO()
     fig.savefig(buf, format="png")
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    return f"<img src='data:image/png;base64,{data}'/>"
+    graph_image = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f'<img src="data:image/png;base64,{graph_image}" alt="Plot" style="max-width:100%; height:auto;" width="600" height="400"/>'
     
+def find_unique_industries(data):
+    unique_array = data['Industry Classifications'].unique()
+    unique_list = list(unique_array)
+    unique_list.sort()
+    primary_only_list = []
+    #Select first option (primary industry)
+    for industry in unique_list:
+        seperate_industry = industry.split('; ')
+        primary_industry = seperate_industry[0]
+        if primary_industry not in primary_only_list:
+            primary_only_list.append(primary_industry)
+
+    primary_only_list_no_duplicates = []
+    for indiv in primary_only_list:
+        if '(Primary)' in indiv:
+            primary_only_list_no_duplicates.append(indiv)
+    return primary_only_list_no_duplicates
 
 if __name__ == "__main__":
     print('hello')
@@ -681,6 +698,7 @@ if __name__ == "__main__":
     # 1. Testing standalone functions
     #insurance_data = create_data_from_csv('Insurance Report.csv')
     test_data = create_data('data/')
+    unique_industries = find_unique_industries(test_data)
     test_data_filtered = industry_filter(test_data, 'Health Care (Primary)')
     chemicals_data = create_data_from_csv('Chemicals Report.csv')
     # correl(test_data, 'P/LTM Diluted EPS Before Extra [Latest] (x)', 'Return on Equity % [LTM]')
