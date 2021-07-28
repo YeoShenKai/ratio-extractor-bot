@@ -671,8 +671,8 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype, industry, user
     
     buf = BytesIO()
     fig.savefig(buf, format="png")
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    return f'<img src="data:image/png;base64,{data}" alt="Plot" style="max-width:100%; height:auto;" width="600" height="400"/>'
+    graph_image = base64.b64encode(buf.getbuffer()).decode("ascii")
+    return f'<img src="data:image/png;base64,{graph_image}" alt="Plot" style="max-width:100%; height:auto;" width="600" height="400"/>'
     
 def find_unique_industries(data):
     unique_array = data['Industry Classifications'].unique()
