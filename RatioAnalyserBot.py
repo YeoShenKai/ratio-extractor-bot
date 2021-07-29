@@ -32,14 +32,6 @@ def create_data(folder_name):
     # df_temp = pd.concat([top_row, df_temp], axis=0).reset_index(drop=True)
     return df_temp
 
-#CSV file --> array
-def create_data_from_csv(filename):
-    df = pd.read_csv(filename, header = 1).values
-    df = pd.DataFrame(df)
-    df.columns = df.iloc[0] #set header
-    df = df.drop(df.index[0])
-    return df
-
 #csv file --> array. *Indexing: [columns][row]
 def create_data_from_csv(filename):
     df = pd.read_csv(filename, header = 1).values
@@ -47,6 +39,7 @@ def create_data_from_csv(filename):
     df.columns = df.iloc[0] #set header
     df = df.drop(df.index[0])
     return df
+
 
 #Check if a value in a cell is a float - returns False if cell is empty or NM
 def isnumber(string):
@@ -561,59 +554,6 @@ def output_website(folder_location, user_inputs):
     #return web_plot(industry_data, best_eqns, predictions)
     return [best_eqns, predictions]
 
-def web_plot(folder_location, best_eqns, predictions):
-    j = 0
-    data = create_data(folder_location)
-    for dependent, indep_eqn_corr in best_eqns.items():
-        x2, y2 = [], []
-        y = col_str_to_int(data, dependent)
-        independent = indep_eqn_corr[0]
-        x = col_str_to_int(data, independent)
-        for i in range(1, len(y)):  # remove blanks
-            if isnumber(y[i]) and isnumber(x[i]):
-                y2.append(y[i])
-                x2.append(x[i])
-        x2array = pd.Series(x2)
-        y2array = pd.Series(y2)
-
-        # remove outliers
-        x_array_no_outliers = x2array[x2array.between(x2array.quantile(0.10), x2array.quantile(0.90))]
-        y_array_no_outliers = y2array[y2array.between(y2array.quantile(0.10), y2array.quantile(0.90))]
-        x_corresponding_list, y_corresponding_list = [], []
-        for i in x_array_no_outliers.index:
-            if i in y_array_no_outliers.index:
-                x_corresponding_list.append(x2array[i])
-                y_corresponding_list.append(y2array[i])
-
-        prediction = predictions[0][dependent][1]  # Predicted value for dependent variable (y axis)
-        selected_dependent = predictions[1][j]  # Input value for each particular dependent variable (x axis)
-        j += 1  # Cycles through the input values
-
-        # Creating best lit line
-        eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
-        gradient = eqn[0]
-        intercept = eqn[1]
-        x_corresponding_array = np.array(x_corresponding_list)
-        fit = gradient * x_corresponding_array + intercept
-
-        # Plotting
-        fig = Figure()
-        ax = fig.subplots()
-        ax.plot(x_corresponding_list, fit, color='black', label='Linear fit')  # Best fit line
-        ax.scatter(x_corresponding_list, y_corresponding_list, s=1, label='Data points')  # Individual data points
-        ax.plot(selected_dependent, prediction, 'rx', label='Selected Company', markersize=10)
-
-        # Labelling the graph
-        ax.set_title(f'{dependent} against {independent}', fontsize='small')
-        ax.set_ylabel(f'{dependent}')
-        ax.set_xlabel(f'{independent}')
-        ax.legend()
-
-        buf = BytesIO()
-        fig.savefig(buf, format="png")
-        data = base64.b64encode(buf.getbuffer()).decode("ascii")
-        return f"<img src='data:image/png;base64,{data}'/>"
-
 def web_plot_2(folder_location, best_eqns, predictions, plottype, industry, user_input_values):
     data = create_data(folder_location)
     data = industry_filter(data, industry)
@@ -638,25 +578,17 @@ def web_plot_2(folder_location, best_eqns, predictions, plottype, industry, user
         if i in y_array_no_outliers.index:
             x_corresponding_list.append(x2array[i])
             y_corresponding_list.append(y2array[i])
-    #print('no outlier len', len(x_corresponding_list), len(y_corresponding_list))
-
     prediction = predictions[0][plottype][1]  # Predicted value for dependent variable (y axis)
-    #print('prediction', prediction)
         
     # Creating best lit line
     eqn = np.polyfit(x_corresponding_list, y_corresponding_list, 1)
     gradient = eqn[0]
     intercept = eqn[1]
     x_corresponding_array = np.array(x_corresponding_list)
-    #print(x_corresponding_array)
-    #print('x len', len(x_corresponding_list))
-    #print('gradient', gradient)
-    #print('intercept', intercept)
     fit = gradient * x_corresponding_array + intercept
     user_input_val = user_input_values[best_eqns[plottype][0]]
 
     # Plotting
-    #fig = plt.figure()
     fig = Figure()
     ax = fig.subplots()
     ax.plot(x_corresponding_list, fit, color='black', label='Linear fit')  # Best fit line
@@ -693,7 +625,6 @@ def find_unique_industries(data):
     return primary_only_list_no_duplicates
 
 if __name__ == "__main__":
-    print('hello')
     ####TEMP TESTING STUFF####
     # 1. Testing standalone functions
     #insurance_data = create_data_from_csv('Insurance Report.csv')
